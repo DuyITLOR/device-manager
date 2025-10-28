@@ -1,8 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
-
-#define CAMERA_MODEL_AI_THINKER
 #include "esp_camera.h"
 
 #include "ESP32QRCodeReader.h"
@@ -38,6 +36,7 @@ void setup()
 void loop()
 {
   // Nhận dữ liệu QR
+
   if (reader.receiveQrCode(&qrCodeData, 300))
   {
     if (qrCodeData.valid)
