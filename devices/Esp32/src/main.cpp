@@ -20,7 +20,8 @@ const int RE_pinB = 27;  // DT
 const int RE_pinSW = 26; // SW
 
 // Global variables
-String deviceList[10] = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
+// String deviceList[10] = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
+std::vector<String> deviceList = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
 String uid;
 volatile long encoderCount = 0;
 volatile uint8_t prevAB = 0;
@@ -34,8 +35,13 @@ int scrollOffset = 0;
 double startSession = 0;
 int state = 0;
 int confirmDelete = 0;
-int indexDelete = -1;
-int deviceCount = sizeof(deviceList) / sizeof(deviceList[0]);
+int indexDelete = -1;   // Use to
+int lastConfirmed = 0; // Use avoid clear LCD too many times for delete 
+int deviceCount = deviceList.size();
+
+// Variable to clear
+int screenClear = 0;
+int screenDeleteClear = 0;
 
 // table
 static const int8_t dirTable[4][4] = {
@@ -80,7 +86,6 @@ void displayWelcome()
 
 void displayDelete(String item)
 {
-  lcd.clear();
   lcd.setCursor(0, 1);
   lcd.print("Deleted: " + item + "   ");
   lcd.setCursor(0, 2);
@@ -108,13 +113,6 @@ int getRE_Index()
       return count;
     }
 
-    // bool pressed = (digitalRead(RE_pinSW) == LOW);
-    // if (pressed != lastPressed)
-    // {
-    //   Serial.print("Button: ");
-    //   Serial.println(pressed ? "PRESSED" : "FREE");
-    //   lastPressed = pressed;
-    // }
   }
   return lastShown;
 }
@@ -136,15 +134,12 @@ String readRFID()
 
 void removeDevices(int index)
 {
-  for (int i = index; i < deviceCount - 1; i++)
+  if (index >= 0 && index < deviceList.size())
   {
-    deviceList[i] = deviceList[i + 1];
+    Serial.println("Removing device: " + deviceList[index]);
+    deviceList.erase(deviceList.begin() + index);
+    Serial.println("Device removed. Current count: " + String(deviceList.size()));
   }
-  deviceList[deviceCount - 1] = "";
-  deviceCount--;
-  Serial.println("Devices count 1: " + String(deviceCount));
-  Serial.println("Devices count 2: " + String(sizeof(deviceList) / sizeof(deviceList[0])));
-
 }
 
 void setup()
@@ -181,6 +176,12 @@ void loop()
   if (uid != "")
   {
     // Serial.println("UID as String: " + uid);
+    if (screenClear == 0)
+    {
+      lcd.clear();
+      screenClear = 1;
+    }  
+
     if (state == 0)
     {
       if (digitalRead(RE_pinSW) == LOW)
@@ -189,10 +190,25 @@ void loop()
         lcd.clear();
         delay(300);
       }
-
+      screenDeleteClear = 0;
       startSession = millis();
       lcd.setCursor(0, 0);
       lcd.print("UID: " + uid + "   ");
+
+      if (deviceCount <= 0)
+      {
+        lcd.setCursor(0, 1);
+        lcd.print("No devices found.   ");
+        return;
+      }
+
+      if (deviceCount < 10){
+        lcd.setCursor(19, 0);
+        lcd.print(deviceCount);
+      } else {
+        lcd.setCursor(18, 0);
+        lcd.print(deviceCount);
+      } 
       RE_index = getRE_Index() / 4;
       if (RE_index < 0)
       {
@@ -248,13 +264,25 @@ void loop()
     }
     else if (state == 1 && indexDelete != -1)
     {
+      startSession = millis();
       confirmDelete = (encoderCount / 4) % 2;
+      
       if (confirmDelete < 0)
       {
         confirmDelete = 0;
       }
 
       // Serial.println("confirmDelete: " + String(confirmDelete));
+      if (lastConfirmed != confirmDelete)
+      {
+        lastConfirmed = confirmDelete;
+        lcd.clear();
+      }
+      if(screenDeleteClear == 0)
+      {
+        lcd.clear();
+        screenDeleteClear = 1;
+      }
 
       displayDelete(deviceList[RE_index]);
 
@@ -263,7 +291,7 @@ void loop()
         while (digitalRead(RE_pinSW) == LOW)
           ;
         removeDevices(indexDelete);
-        deviceCount = sizeof(deviceList) / sizeof(deviceList[0]);
+        deviceCount = deviceList.size();
         lcd.clear();
         encoderCount = indexDelete * 4;
         Serial.println("indexDelete: " + String(indexDelete));
@@ -289,6 +317,7 @@ void loop()
       lcd.clear();
       displayWelcome();
       startSession = millis();
+      screenClear = 0;
     }
   }
 }
