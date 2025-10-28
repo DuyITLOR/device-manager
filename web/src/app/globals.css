@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 240 40% 98%;
+    --foreground: 218 68% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 218 68% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 218 68% 20%;
+
+    --primary: 218 68% 36%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 218 70% 50%;
+
+    --secondary: 260 60% 65%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 20% 94%;
+    --muted-foreground: 218 20% 50%;
+
+    --accent: 280 65% 70%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 20% 90%;
+    --input: 240 20% 92%;
+    --ring: 218 68% 36%;
+
+    --radius: 1rem;
+
+    /* Glassmorphism */
+    --glass-bg: 0 0% 100% / 0.6;
+    --glass-border: 240 20% 90% / 0.3;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(218 68% 36%), hsl(218 70% 50%));
+    --gradient-pastel: linear-gradient(135deg, hsl(260 60% 85%), hsl(280 65% 85%), hsl(200 60% 85%));
+    --gradient-soft: linear-gradient(180deg, hsl(240 40% 98%), hsl(240 40% 96%));
+
+    /* Shadows */
+    --shadow-soft: 0 8px 32px hsl(218 68% 36% / 0.1);
+    --shadow-glow: 0 0 40px hsl(218 70% 50% / 0.15);
+
+    --sidebar-background: 0 0% 100% / 0.8;
+    --sidebar-foreground: 218 68% 20%;
+    --sidebar-primary: 218 68% 36%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 20% 94%;
+    --sidebar-accent-foreground: 218 68% 36%;
+    --sidebar-border: 240 20% 90% / 0.3;
+    --sidebar-ring: 218 68% 36%;
+  }
+
+  .dark {
+    --background: 218 40% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 218 30% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 218 30% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 218 70% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 218 80% 60%;
+
+    --secondary: 260 60% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 218 20% 18%;
+    --muted-foreground: 240 10% 65%;
+
+    --accent: 280 65% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 218 20% 20%;
+    --input: 218 20% 18%;
+    --ring: 218 70% 50%;
+
+    /* Glassmorphism Dark */
+    --glass-bg: 218 30% 12% / 0.6;
+    --glass-border: 218 20% 30% / 0.3;
+
+    /* Gradients Dark */
+    --gradient-primary: linear-gradient(135deg, hsl(218 70% 50%), hsl(218 80% 60%));
+    --gradient-pastel: linear-gradient(135deg, hsl(260 60% 35%), hsl(280 65% 35%), hsl(200 60% 35%));
+    --gradient-soft: linear-gradient(180deg, hsl(218 40% 8%), hsl(218 40% 10%));
+
+    /* Shadows Dark */
+    --shadow-soft: 0 8px 32px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 40px hsl(218 80% 60% / 0.2);
+
+    --sidebar-background: 218 30% 12% / 0.8;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 218 70% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 218 20% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 218 20% 20% / 0.3;
+    --sidebar-ring: 218 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-background via-background to-muted text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/60 dark:bg-card/60 border border-white/30 dark:border-border/30 shadow-lg;
+  }
+
+  .glass-button {
+    @apply backdrop-blur-sm bg-white/40 dark:bg-card/40 hover:bg-white/60 dark:hover:bg-card/60 border border-white/50 dark:border-border/50;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary via-primary-glow to-secondary bg-clip-text text-transparent;
+  }
+}

@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable turbopack temporarily to avoid workspace issues
-  // turbopack: {
-  //   root: process.cwd(),
-  // },
+  images: {
+    domains: [],
+  },
 };
 
 module.exports = nextConfig;
