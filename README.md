@@ -1,7 +1,7 @@
-
 # 📦 Device Manager System
 
 Hệ thống quản lý thiết bị bao gồm:
+
 - ✅ **Frontend**: Next.js + TypeScript (thư mục `/web`)
 - ✅ **Backend**: NestJS + TypeScript (thư mục `/server`)
 
@@ -9,36 +9,36 @@ Hệ thống quản lý thiết bị bao gồm:
 
 ## ✅ 1. Yêu cầu trước khi chạy
 
-| Công cụ  | Phiên bản khuyến nghị |
-|----------|-------------------------|
-| Node.js  | >= 18.x                |
-| pnpm (hoặc npm) | pnpm khuyến khích |
-| Git      | Dùng để clone source   |
+| Công cụ         | Phiên bản khuyến nghị |
+| --------------- | --------------------- |
+| Node.js         | >= 18.x               |
+| pnpm (hoặc npm) | pnpm khuyến khích     |
+| Git             | Dùng để clone source  |
 
 **Kiểm tra nhanh:**
-\`\`\`bash
+
+```bash
 node -v
 pnpm -v      # hoặc npm -v
-\`\`\`
+```
 
 ---
 
 ## ✅ 2. Clone project
 
-\`\`\`bash
+```bash
 git clone https://github.com/<username>/device-manager.git
 cd device-manager
-\`\`\`
+pnpm install
+```
 
 ---
 
 ## ✅ 3. Chạy Frontend (Next.js)
 
-\`\`\`bash
-cd web
-pnpm install     # hoặc npm install
-pnpm dev         # hoặc npm run dev
-\`\`\`
+```bash
+pnpm dev:web
+```
 
 Truy cập: **http://localhost:3000**
 
@@ -46,29 +46,25 @@ Truy cập: **http://localhost:3000**
 
 ## ✅ 4. Chạy Backend (NestJS)
 
-\`\`\`bash
-cd server
-pnpm install     # hoặc npm install
-pnpm start:dev   # hoặc npm run start:dev
-\`\`\`
+```bash
+pnpm dev:server
+```
 
 Truy cập API: **http://localhost:3000**
 
 ---
 
-## ✅ 5. Build Backend (Production)
+## ✅ 5. Chạy cả 2
 
-\`\`\`bash
-cd server
-pnpm build
-pnpm start:prod
-\`\`\`
+```bash
+pnpm dev:all
+```
 
 ---
 
 ## ✅ 6. Cấu trúc thư mục
 
-\`\`\`
+```
 device-manager/
 ├── web/                # Frontend - Next.js
 │   ├── app/
@@ -84,49 +80,41 @@ device-manager/
 │
 ├── .gitignore
 └── README.md
-\`\`\`
+```
 
 ---
 
 ## ✅ 7. Không commit các file/thư mục sau:
 
-\`\`\`
+```
 node_modules/
 web/.next/
 server/dist/
 .env
 .env.local
 *.log
-\`\`\`
+```
 
 ---
 
 ## ✅ 8. Roadmap
 
-| Tính năng | Trạng thái |
-|-----------|------------|
-| ✅ Setup Frontend & Backend | Done |
+| Tính năng                                   | Trạng thái |
+| ------------------------------------------- | ---------- |
+| ✅ Setup Frontend & Backend                 | Done       |
 | ⬜ Kết nối Database (MongoDB or PostgreSQL) |
-| ⬜ API: Users / Products / Borrow |
-| ⬜ Auth (JWT) |
-| ⬜ UI Dashboard quản lý thiết bị |
-| ⬜ Activity Log (lịch sử mượn / trả) |
+| ⬜ API: Users / Products / Borrow           |
+| ⬜ Auth (JWT)                               |
+| ⬜ UI Dashboard quản lý thiết bị            |
+| ⬜ Activity Log (lịch sử mượn / trả)        |
 
 ---
 
 ## ✅ 9. Cách chạy nhanh cho người khác clone
 
-\`\`\`bash
-# Frontend
-cd web
+```bash
 pnpm install
-pnpm dev
-
-# Backend
-cd ../server
-pnpm install
-pnpm start:dev
-\`\`\`
+pnpm dev:all
+```
 
 ---
-
