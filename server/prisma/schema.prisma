@@ -10,54 +10,54 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id String @id
-  code String
-  name String
-  email String
-  password String
-  role String
+  id        String   @id
+  code      String
+  name      String
+  email     String
+  password  String
+  role      String
   createdAt DateTime
 }
 
 model Device {
-  id String  @id
-  name String
+  id          String   @id
+  name        String
   description String
-  status String
-  createdAt DateTime
+  status      String
+  createdAt   DateTime
 }
 
 model Loan {
-  id String @id
-  deviceId String
+  id         String   @id
+  deviceId   String
   borrowerId String
-  status String
+  status     String
   borrowedAt DateTime
   returnedAt DateTime
-  note String
+  note       String
 }
 
 model Transfer {
-  id String @id
-  loanId String
-  fromUserId String
-  toUserId String
-  status String
+  id          String   @id
+  loanId      String
+  fromUserId  String
+  toUserId    String
+  status      String
   requestedAt DateTime
 }
 
 model ActivityLog {
-  id String @id
-  actorId String
-  action String
+  id         String   @id
+  actorId    String
+  action     String
   targetType String
-  targetId String
-  timestamp DateTime
-  details Json
+  targetId   String
+  timestamp  DateTime
+  details    Json
 }
