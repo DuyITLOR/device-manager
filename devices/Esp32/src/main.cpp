@@ -3,6 +3,9 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <vector>
+#include <WiFi.h>
+#include <esp_now.h>
+#include <WiFi.h>
 
 // Pin definitions
 /*
@@ -21,7 +24,7 @@ const int RE_pinSW = 26; // SW
 
 // Global variables
 // String deviceList[10] = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
-std::vector<String> deviceList = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
+std::vector<String> deviceList;
 String uid;
 volatile long encoderCount = 0;
 volatile uint8_t prevAB = 0;
@@ -35,9 +38,9 @@ int scrollOffset = 0;
 double startSession = 0;
 int state = 0;
 int confirmDelete = 0;
-int indexDelete = -1;   // Use to
-int lastConfirmed = 0; // Use avoid clear LCD too many times for delete 
-int deviceCount = deviceList.size();
+int indexDelete = -1;  // Use to
+int lastConfirmed = 0; // Use avoid clear LCD too many times for delete
+int checkpoint_1 = 0;
 
 // Variable to clear
 int screenClear = 0;
@@ -106,13 +109,9 @@ int getRE_Index()
 
     if (count != lastShown)
     {
-      lcd.setCursor(0, 1);
-      lcd.print("Count: " + String(count) + "   ");
       lastShown = count;
-
       return count;
     }
-
   }
   return lastShown;
 }
@@ -142,6 +141,57 @@ void removeDevices(int index)
   }
 }
 
+String normalize(String name)
+{
+  name.trim();
+  name.toLowerCase();
+  return name;
+}
+
+bool checkSame(String name)
+{
+  String normName = normalize(name);
+  for (const String &device : deviceList)
+  {
+    if (normalize(device) == normName)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+void addDevices(String name)
+{
+  if (!checkSame(name))
+  {
+    deviceList.push_back(name);
+    Serial.println("Device added: " + name);
+  }
+  else
+  {
+    Serial.println("Device already exists: " + name);
+  }
+
+  RE_index = deviceList.size() - 1;
+  encoderCount = RE_index * 4;
+  lastRE_index = RE_index;
+}
+
+void onReceive(const uint8_t *mac, const uint8_t *incomingData, int len)
+{
+  char senderMac[18];
+  snprintf(senderMac, sizeof(senderMac),
+           "%02X:%02X:%02X:%02X:%02X:%02X",
+           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+  Serial.printf("\n[INFO] Data received from: %s\n", senderMac);
+
+  String msg = String((char *)incomingData);
+  Serial.printf("[INFO] Message: %s\n", msg.c_str());
+  addDevices(msg);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -160,14 +210,24 @@ void setup()
   // RFID setup
   SPI.begin();
   mfrc522.PCD_Init();
-  Serial.println("Place your RFID card near the reader...");
+  Serial.println("[INFO] Place your RFID card near the reader...");
 
   // LCD setup
   lcd.init();
   lcd.backlight();
   displayWelcome();
   delay(2000);
-  lcd.clear();
+  WiFi.mode(WIFI_STA);
+  Serial.println("[INFO] MAC address: " + WiFi.macAddress());
+
+  if (esp_now_init() != ESP_OK)
+  {
+    Serial.println("[ERROR] Error initializing ESP-NOW");
+    return;
+  }
+
+  esp_now_register_recv_cb(onReceive);
+  Serial.println("[INFO] Ready to receive via ESP-NOW!");
 }
 
 void loop()
@@ -175,12 +235,11 @@ void loop()
   uid = readRFID();
   if (uid != "")
   {
-    // Serial.println("UID as String: " + uid);
     if (screenClear == 0)
     {
       lcd.clear();
       screenClear = 1;
-    }  
+    }
 
     if (state == 0)
     {
@@ -195,33 +254,40 @@ void loop()
       lcd.setCursor(0, 0);
       lcd.print("UID: " + uid + "   ");
 
-      if (deviceCount <= 0)
+      if (deviceList.size() == 0)
       {
         lcd.setCursor(0, 1);
         lcd.print("No devices found.   ");
+        checkpoint_1 = 0;
         return;
+      } 
+      else if(deviceList.size() > 0 && checkpoint_1 == 0)
+      {
+        lcd.clear();
+        checkpoint_1 = 1;
       }
 
-      if (deviceCount < 10){
+      if (deviceList.size() < 10)
+      {
         lcd.setCursor(19, 0);
-        lcd.print(deviceCount);
-      } else {
+        lcd.print(deviceList.size());
+      }
+      else
+      {
         lcd.setCursor(18, 0);
-        lcd.print(deviceCount);
-      } 
+        lcd.print(deviceList.size());
+      }
       RE_index = getRE_Index() / 4;
       if (RE_index < 0)
       {
         RE_index = 0;
         encoderCount = 0;
       }
-      else if (RE_index >= deviceCount)
+      else if (RE_index >= deviceList.size())
       {
-        RE_index = deviceCount - 1;
+        RE_index = deviceList.size() - 1;
         encoderCount = RE_index * 4;
       }
-
-      Serial.println("RE_index: " + String(RE_index));
 
       if (RE_index < scrollOffset)
       {
@@ -247,7 +313,7 @@ void loop()
         {
           lcd.print("> " + deviceList[displayRE_Index] + "   ");
         }
-        else if (displayRE_Index < deviceCount)
+        else if (displayRE_Index < deviceList.size())
         {
           lcd.print("  " + deviceList[displayRE_Index] + "   ");
         }
@@ -266,7 +332,7 @@ void loop()
     {
       startSession = millis();
       confirmDelete = (encoderCount / 4) % 2;
-      
+
       if (confirmDelete < 0)
       {
         confirmDelete = 0;
@@ -278,7 +344,7 @@ void loop()
         lastConfirmed = confirmDelete;
         lcd.clear();
       }
-      if(screenDeleteClear == 0)
+      if (screenDeleteClear == 0)
       {
         lcd.clear();
         screenDeleteClear = 1;
@@ -291,7 +357,6 @@ void loop()
         while (digitalRead(RE_pinSW) == LOW)
           ;
         removeDevices(indexDelete);
-        deviceCount = deviceList.size();
         lcd.clear();
         encoderCount = indexDelete * 4;
         Serial.println("indexDelete: " + String(indexDelete));
@@ -314,7 +379,12 @@ void loop()
   {
     if (millis() - startSession > 5000)
     {
+      encoderCount = 0;
+      RE_index = 0;
+      scrollOffset = 0;
+      lastRE_index = -1;
       lcd.clear();
+      deviceList.clear();
       displayWelcome();
       startSession = millis();
       screenClear = 0;
