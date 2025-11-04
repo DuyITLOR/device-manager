@@ -15,49 +15,136 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+
+
+enum UserRole {
+  USER
+  MANAGER
+  ADMIN
+}
+
+
+
+enum DeviceStatus {
+  AVAILABLE
+  BORROWED
+  MAINTENANCE
+}
+
+enum LoanStatus {
+  BORROWED
+  RETURNED
+}
+
+enum TransferStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED
+}
+
+enum ActivityTargetType {
+  Loan
+  Transfer
+  Device
+  User
+}
+
+enum ActivityAction {
+  LOAN_CREATE
+  LOAN_RETURN
+  TRANSFER_REQUEST
+  TRANSFER_APPROVE
+  TRANSFER_REJECT
+  TRANSFER_CANCEL
+  DEVICE_CREATE
+  DEVICE_UPDATE
+  AUTH_LOGIN
+  AUTH_LOGOUT
+}
+
+
+
 model User {
-  id        String   @id
+  id        String   @id @default(uuid())
   code      String
   name      String
-  email     String
+  email     String   @unique
   password  String
-  role      String
-  createdAt DateTime
+  role      UserRole
+  createdAt DateTime @default(now())
+
+  loansBorrowed   Loan[]        @relation("LoansByBorrower")
+  transfersFrom   Transfer[]    @relation("TransfersFromUser")
+  transfersTo     Transfer[]    @relation("TransfersToUser")
+  activityLogs    ActivityLog[] @relation("ActivityActor")
+
 }
 
 model Device {
   id          String   @id
   name        String
   description String
-  status      String
-  createdAt   DateTime
+  status      DeviceStatus
+  createdAt   DateTime @default(now())
+
+  loans Loan[]
+
+  @@index([status])
 }
 
 model Loan {
-  id         String   @id
+  id         String   @id @default(uuid())
   deviceId   String
   borrowerId String
-  status     String
-  borrowedAt DateTime
-  returnedAt DateTime
+  status     LoanStatus
+  borrowedAt DateTime @default(now())
+  returnedAt DateTime?
   note       String
+
+
+  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  borrower   User     @relation("LoansByBorrower", fields: [borrowerId], references: [id], onDelete: Restrict)
+
+  transfers  Transfer[]
+
+  @@index([deviceId])
+  @@index([borrowerId])
+  @@index([status])
 }
 
+
 model Transfer {
-  id          String   @id
+  id          String   @id @default(uuid())
   loanId      String
   fromUserId  String
   toUserId    String
-  status      String
-  requestedAt DateTime
+  status      TransferStatus
+  requestedAt DateTime @default(now())
+
+
+  loan     Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  fromUser User @relation("TransfersFromUser", fields: [fromUserId], references: [id], onDelete: Restrict)
+  toUser   User @relation("TransfersToUser", fields: [toUserId], references: [id], onDelete: Restrict)
+
+  @@index([loanId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([status])
 }
 
 model ActivityLog {
-  id         String   @id
-  actorId    String
-  action     String
-  targetType String
+  id         String   @id @default(uuid())
+  actorId    String?
+  action     ActivityAction
+  targetType ActivityTargetType
   targetId   String
-  timestamp  DateTime
+  timestamp  DateTime @default(now())    
   details    Json
+
+  actor      User? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([targetType, targetId])
+  @@index([timestamp])
 }
