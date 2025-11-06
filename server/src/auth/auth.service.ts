@@ -48,6 +48,9 @@ export class AuthService {
 
 
     async signin(dto: { email: string; password: string }) {
+        if (!dto.email || !dto.password)
+            throwAuthError('AUTH_MISSING_FIELDS');
+
         const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
         if (!user) throwAuthError('AUTH_INVALID_CREDENTIALS');
 
