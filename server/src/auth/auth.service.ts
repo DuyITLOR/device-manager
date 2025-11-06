@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { hashPassword, comparePassword } from 'src/shared/utils';
-import { AUTH_MESSAGES, ROLES, Role } from 'src/shared/constants';
+import { hashPassword, comparePassword } from '../shared/utils';
+import { AUTH_MESSAGES, ROLES, Role } from '../shared/constants';
 import { PrismaClient } from '@prisma/client';
 
 type User = { id: string, email: string, password: string, role: Role };
@@ -40,7 +40,7 @@ export class AuthService {
 
 
 
-    async login(dto: { email: string; password: string }) {
+    async signin(dto: { email: string; password: string }) {
         const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
         if (!user) throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
 
