@@ -1,13 +1,18 @@
-import { Injectable, ConflictException, UnauthorizedException, Inject } from '@nestjs/common';
+import { Injectable, ConflictException, UnauthorizedException, Inject, HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashPassword, comparePassword } from '../shared/utils';
 import { AUTH_MESSAGES, ROLES, Role } from '../shared/constants';
 import { PrismaClient } from '@prisma/client';
+import { func } from 'joi';
 
 type User = { id: string, email: string, password: string, role: Role };
 
 const user: User[] = [];
 
+function throwAuthError(code: keyof typeof AUTH_MESSAGES): never {
+   const err = AUTH_MESSAGES[code];
+   throw new HttpException({code, message: err.message}, err.status);
+}
 @Injectable()
 export class AuthService {
     private prisma = new PrismaClient();
@@ -16,7 +21,7 @@ export class AuthService {
 
     async signup(dto: { email: string; password: string; name?: string; role?: Role }) {
         const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
-        if (exists) throw new ConflictException(AUTH_MESSAGES.EMAIL_EXISTS);
+        if (exists) throwAuthError('AUTH_DUPLICATE_EMAIL');
 
         const user = await this.prisma.user.create({
             data: {
@@ -28,7 +33,9 @@ export class AuthService {
         });
 
         return {
-            message: AUTH_MESSAGES.SIGNUP_SUCCESS,
+            status: AUTH_MESSAGES.SIGNUP_SUCCESS.status,
+            success: true,
+            message: AUTH_MESSAGES.SIGNUP_SUCCESS.message,
             data: { 
                 id: user.id, 
                 email: user.email, 
@@ -42,16 +49,18 @@ export class AuthService {
 
     async signin(dto: { email: string; password: string }) {
         const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
-        if (!user) throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
+        if (!user) throwAuthError('AUTH_INVALID_CREDENTIALS');
 
         const valid = await comparePassword(dto.password, user.password);
-        if (!valid) throw new UnauthorizedException(AUTH_MESSAGES.INVALID_CREDENTIALS);
+        if (!valid) throwAuthError('AUTH_INVALID_CREDENTIALS');
 
         const payload = { sub: user.id, email: user.email, role: user.role };
         const accessToken = await this.jwt.signAsync(payload);
 
         return {
-            message: AUTH_MESSAGES.LOGIN_SUCCESS,
+            status: AUTH_MESSAGES.LOGIN_SUCCESS.status,
+            success: true,
+            message: AUTH_MESSAGES.LOGIN_SUCCESS.message,
             data: {
                 accessToken,
                 user: { 

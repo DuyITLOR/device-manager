@@ -35,8 +35,6 @@ import {
         success: false,
         code,
         message,
-        path: req.url,
-        timestamp: new Date().toISOString(),
       });
     }
   }
