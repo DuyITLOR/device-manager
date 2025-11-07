@@ -4,14 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently -n \"web,server\" -c \"cyan,green\" \"pnpm --filter @app/web dev\" \"pnpm --filter @app/server dev\"",
-    "dev:web": "pnpm --filter @app/web dev",
-    "dev:server": "pnpm --filter @app/server dev",
-    "db:generate": "pnpm --filter server exec prisma generate",
-    "db:migrate": "pnpm --filter server exec prisma migrate dev",
-    "build": "pnpm -r build",
-    "lint": "pnpm -r lint"
-  },
+    "dev": "concurrently -n \"WEB,SERVER\" -c \"cyan,green\" \"pnpm --filter=web run dev\" \"pnpm --filter=server run dev\"",
+    "dev:web": "pnpm --filter=web run dev",
+    "dev:server": "pnpm --filter=server run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint"
+  }
+  ,
   "keywords": [],
   "author": "",
   "license": "ISC",
