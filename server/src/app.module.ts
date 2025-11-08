@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/validation';
 import { AuthModule } from './modules/auth/auth.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -11,7 +12,8 @@ import { AuthModule } from './modules/auth/auth.module';
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
-    AuthModule,                             
+    AuthModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
