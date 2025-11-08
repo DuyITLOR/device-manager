@@ -1,9 +1,9 @@
-import { Injectable, ConflictException, UnauthorizedException, Inject, HttpException } from '@nestjs/common';
+import { Injectable, HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { hashPassword, comparePassword } from '../../shared/utils';
 import { AUTH_MESSAGES, ROLES, Role } from '../../shared/constants';
 import { PrismaClient } from '@prisma/client';
-import { func } from 'joi';
+
 
 type User = { id: string, email: string, password: string, role: Role };
 

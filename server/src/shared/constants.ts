@@ -10,6 +10,18 @@ export const AUTH_MESSAGES = {
 
 export type AuthErrorCode = keyof typeof AUTH_MESSAGES;
 
+export const USER_MESSAGES = {
+  USER_NOT_FOUND:                { status: 404, message: 'Người dùng không tồn tại' },
+  USER_DUPLICATE_EMAIL:          { status: 409, message: 'Email đã được sử dụng' },
+  USER_FORBIDDEN_UPDATE_OTHERS:  { status: 403, message: 'Không có quyền cập nhật thông tin người khác' },
+  USER_FORBIDDEN_CHANGE_PASSWORD_OTHERS: { status: 403, message: 'Không có quyền đổi mật khẩu người khác' },
+  USER_WRONG_PASSWORD:           { status: 400, message: 'Mật khẩu hiện tại không đúng' },
+  USER_CREATE_SUCCESS:           { status: 201, message: 'Tạo người dùng thành công' },
+  USER_UPDATE_SUCCESS:           { status: 200, message: 'Cập nhật người dùng thành công' },
+  USER_DELETE_SUCCESS:           { status: 200, message: 'Xóa người dùng thành công' },
+} as const;
+
+
 export const ROLES = {
   ADMIN: 'ADMIN',
   USER: 'USER',
