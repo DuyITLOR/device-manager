@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, UnauthorizedException, Inject, HttpException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { hashPassword, comparePassword } from '../shared/utils';
-import { AUTH_MESSAGES, ROLES, Role } from '../shared/constants';
+import { hashPassword, comparePassword } from '../../shared/utils';
+import { AUTH_MESSAGES, ROLES, Role } from '../../shared/constants';
 import { PrismaClient } from '@prisma/client';
 import { func } from 'joi';
 

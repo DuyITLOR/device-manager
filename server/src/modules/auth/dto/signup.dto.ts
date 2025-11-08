@@ -1,5 +1,5 @@
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
-import type { Role } from '../../shared/constants';
+import type { Role } from '../../../shared/constants';
 
 export class SignupDto {
   @IsEmail() email: string;
