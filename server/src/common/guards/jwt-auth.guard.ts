@@ -4,7 +4,7 @@ import { AuthGuard } from "@nestjs/passport";
 
 // This function will check the request public or private
 @Injectable()
-export class jwtAuthGuard extends AuthGuard("jwt") {
+export class JwtAuthGuard extends AuthGuard("jwt") {
     constructor(private reflector : Reflector){
         super();
     }

@@ -35,6 +35,10 @@ export class UsersService {
         return this.sanitize(user);
     }
 
+    async findByEmail(email: string) {
+        return this.prisma.user.findUnique({ where: { email } });
+    }
+
     async create(dto: createUserDto){
         const existed = await this.prisma.user.findUnique({ where: { email: dto.email } });
         if (existed) throwUserError('USER_DUPLICATE_EMAIL');

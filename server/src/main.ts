@@ -17,6 +17,12 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
+  app.enableCors({
+    origin: '*', 
+    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   const port = process.env.PORT ?? 5050;
   await app.listen(port);
   console.log(`Server is running on http://localhost:${port}`);
