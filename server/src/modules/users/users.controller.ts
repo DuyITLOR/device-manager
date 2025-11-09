@@ -31,7 +31,7 @@ export class UsersController
     }
 
 
-    @Patch('id')
+    @Patch(':id')
     updateProfile(
         @Param('id') id: string,
         @Body() dto: updateUserDto,
