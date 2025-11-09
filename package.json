@@ -7,6 +7,11 @@
     "dev": "concurrently -n \"WEB,SERVER\" -c \"cyan,green\" \"pnpm --filter=web run dev\" \"pnpm --filter=server run dev\"",
     "dev:web": "pnpm --filter=web run dev",
     "dev:server": "pnpm --filter=server run dev",
+
+    "add:web": "pnpm --filter=web add",
+    "add:server": "pnpm --filter=server add",
+    "add:root": "pnpm -w add",
+    
     "build": "pnpm -r run build",
     "lint": "pnpm -r run lint"
   }
