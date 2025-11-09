@@ -12,6 +12,7 @@ import { JwtAuthGuard  } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/role.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
     { provide: APP_INTERCEPTOR, useClass: ResponseInterceptor },
 
     { provide: APP_FILTER, useClass: HttpExceptionFilter },
+    HealthModule,
   ],
 })
 export class AppModule {}
