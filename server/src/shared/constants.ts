@@ -29,14 +29,3 @@ export const ROLES = {
 } as const;
 
 export type Role = keyof typeof ROLES;
-
-
-export const DEVICE_MESSAGES = {
-  DEVICE_CREATE_SUCCESS: { status: 201, message: 'Tạo thiết bị thành công' },
-  DEVICE_UPDATE_SUCCESS: { status: 200, message: 'Cập nhật thiết bị thành công' },
-  DEVICE_DELETE_SUCCESS: { status: 200, message: 'Xóa thiết bị thành công' },
-  DEVICE_NOT_FOUND:      { status: 404, message: 'Thiết bị không tồn tại' },
-  DEVICE_DUPLICATE_ID:   { status: 409, message: 'Mã thiết bị đã tồn tại' },
-  DEVICE_QUERY_SUCCESS:  { status: 200, message: 'Lấy danh sách thiết bị thành công' },
-} as const;
-  
