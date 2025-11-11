@@ -1,21 +1,20 @@
-import { DeviceStatus } from "@prisma/client";
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { DeviceStatus } from '@prisma/client';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateDevicesDto {
-    @IsString()
-    @IsNotEmpty()
-    id: string;
+  @IsString()
+  @IsNotEmpty()
+  id: string;
 
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsString()
-    @IsOptional()
-    description?: string;
+  @IsString()
+  @IsOptional()
+  description?: string;
 
-    @IsEnum(DeviceStatus)
-    @IsNotEmpty()
-    status: DeviceStatus;
+  @IsEnum(DeviceStatus)
+  @IsNotEmpty()
+  status: DeviceStatus;
 }
-

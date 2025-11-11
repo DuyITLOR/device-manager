@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaClient, ActivityAction, ActivityTargetType } from '@prisma/client';
+import {
+  PrismaClient,
+  ActivityAction,
+  ActivityTargetType,
+} from '@prisma/client';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
 import { QueryActivityLogDto } from './dto/query-activity-log.dto';
 
@@ -151,7 +155,11 @@ export class ActivityService {
   /**
    * Lấy activity logs theo target (targetType + targetId)
    */
-  async findByTarget(targetType: ActivityTargetType, targetId: string, limit = 20) {
+  async findByTarget(
+    targetType: ActivityTargetType,
+    targetId: string,
+    limit = 20,
+  ) {
     const activityLogs = await this.prisma.activityLog.findMany({
       where: {
         targetType,
@@ -211,4 +219,3 @@ export class ActivityService {
     };
   }
 }
-

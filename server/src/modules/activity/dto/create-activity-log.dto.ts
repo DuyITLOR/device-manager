@@ -1,4 +1,10 @@
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ActivityAction, ActivityTargetType } from '@prisma/client';
 
 export class CreateActivityLogDto {
@@ -22,4 +28,3 @@ export class CreateActivityLogDto {
   @IsOptional()
   details?: Record<string, any>;
 }
-
