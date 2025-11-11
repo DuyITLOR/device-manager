@@ -10,11 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Plus, QrCode, Download, Edit, Trash2, Users, Package, History, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { requireAuthAndRole } from '@/lib/utils/auth';
 
 const AdminDashboard = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState('devices');
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
 
   // Mock data
@@ -84,8 +89,12 @@ const AdminDashboard = () => {
 
   const handleExportQR = () => {
     console.log('Exporting QR codes for devices:', selectedDevices);
-    // TODO: Implement QR code generation and PDF export
   };
+
+  useEffect(() => {
+    const ok = requireAuthAndRole(router, toast, ['ADMIN']);
+    setHasAccess(ok);
+  }, [router, toast]);
 
   return (
     <div className='min-h-screen p-4 md:p-8'>
@@ -102,7 +111,6 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        {/* Stats Cards */}
         <div className='grid md:grid-cols-3 gap-4'>
           <Card className='glass-card'>
             <CardContent className='pt-6'>
@@ -145,15 +153,12 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab} className='space-y-6'>
           <TabsList className='glass-card'>
             <TabsTrigger value='devices'>Devices</TabsTrigger>
             <TabsTrigger value='members'>Members</TabsTrigger>
             <TabsTrigger value='activity'>Activity</TabsTrigger>
           </TabsList>
-
-          {/* Devices Tab */}
           <TabsContent value='devices' className='space-y-4'>
             <Card className='glass-card'>
               <CardHeader>
@@ -193,7 +198,7 @@ const AdminDashboard = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className='w-12'>
-                          <input type='checkbox' className='rounded' />
+                          <input type='checkbox' className='rounded' aria-label='Chọn tất cả thiết bị' />
                         </TableHead>
                         <TableHead>Device</TableHead>
                         <TableHead>Serial Number</TableHead>
@@ -212,6 +217,7 @@ const AdminDashboard = () => {
                               checked={selectedDevices.includes(device.id)}
                               onChange={() => toggleDeviceSelection(device.id)}
                               className='rounded'
+                              aria-label={`Chọn thiết bị ${device.name}`}
                             />
                           </TableCell>
                           <TableCell className='font-medium'>{device.name}</TableCell>
