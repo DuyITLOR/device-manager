@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import {
   PrismaClient,
-  ActivityAction,
+  // ActivityAction,
   ActivityTargetType,
+  Prisma,
 } from '@prisma/client';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
 import { QueryActivityLogDto } from './dto/query-activity-log.dto';
@@ -51,7 +52,7 @@ export class ActivityService {
       endDate,
     } = query;
 
-    const where: any = {};
+    const where: Prisma.ActivityLogFindManyArgs['where'] = {};
 
     if (actorId) {
       where.actorId = actorId;

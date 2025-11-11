@@ -45,6 +45,7 @@ export const ROLES = {
   MANAGER: 'MANAGER',
 } as const;
 
+<<<<<<< HEAD
 export type Role = keyof typeof ROLES;
 
 export const DEVICE_MESSAGES = {
@@ -61,3 +62,6 @@ export const DEVICE_MESSAGES = {
     message: 'Lấy danh sách thiết bị thành công',
   },
 } as const;
+=======
+export type Role = keyof typeof ROLES;
+>>>>>>> origin/main
