@@ -1,5 +1,5 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client/extension';
 import { CreateDevicesDto } from '../devices/dto/createDevices.dto';
 import { DeviceStatus } from '@prisma/client';
 import { DEVICE_MESSAGES } from '../../shared/constants';
