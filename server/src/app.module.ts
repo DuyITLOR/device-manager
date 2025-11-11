@@ -8,7 +8,7 @@ import { envValidationSchema } from './config/validation';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/user.module';
 
-import { JwtAuthGuard  } from './common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/role.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -25,7 +25,6 @@ import { HealthModule } from './modules/health/health.module';
     UsersModule,
   ],
   providers: [
-
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
 

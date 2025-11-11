@@ -6,19 +6,17 @@ import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
-    @Public()
-    @Post('signup')
-    signup(@Body() dto: SignupDto)
-    {
-        return this.authService.signup(dto);
-    }
+  @Public()
+  @Post('signup')
+  signup(@Body() dto: SignupDto) {
+    return this.authService.signup(dto);
+  }
 
-    @Public()
-    @Post('signin')
-    login(@Body() dto: SigninDto)
-    {
-        return this.authService.signin(dto);
-    }
+  @Public()
+  @Post('signin')
+  login(@Body() dto: SigninDto) {
+    return this.authService.signin(dto);
+  }
 }
