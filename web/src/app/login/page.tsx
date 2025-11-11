@@ -6,21 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
+import { signin } from '@/lib/services/auth';
+import { saveToken } from '@/lib/utils/auth';
+import { useToast } from '@/hooks/use-toast';
 import { Package } from 'lucide-react';
 
 const Login = () => {
   const router = useRouter();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement actual authentication
-    // For demo, redirect based on email
-    if (email.includes('admin') || email.includes('manager')) {
-      router.push('/admin');
-    } else {
-      router.push('/dashboard');
+    try {
+      setLoading(true);
+      const res = await signin({ email, password });
+      saveToken(res.data.accessToken);
+      toast({ title: 'Đăng nhập thành công', description: `Xin chào ${res.data.user?.name}` });
+      router.push('/');
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      let msg = error?.message ?? error?.data?.message ?? 'Đăng nhập thất bại. Vui lòng thử lại.';
+      if (error?.status === 401) {
+        msg = 'Sai tên đăng nhập hoặc mật khẩu';
+      }
+      toast({ title: 'Đăng nhập thất bại', description: String(msg), variant: 'destructive' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,12 +76,9 @@ const Login = () => {
                 className='glass-card'
               />
             </div>
-            <Button type='submit' className='w-full h-11'>
+            <Button type='submit' className='w-full h-11' disabled={loading}>
               Sign In
             </Button>
-            <div className='text-center text-sm text-muted-foreground'>
-              Demo: Use admin@example.com for admin view or user@example.com for user view
-            </div>
           </form>
         </CardContent>
       </Card>
