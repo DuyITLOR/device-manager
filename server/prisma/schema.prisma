@@ -81,7 +81,7 @@ model User {
 }
 
 model Device {
-  id          String   @id  @default(uuid())
+  id          String   @id
   name        String
   description String
   status      DeviceStatus
