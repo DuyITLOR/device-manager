@@ -20,7 +20,7 @@ const Login = () => {
 
   const handleNavigation = () => {
     const userRole = getRole();
-    if (userRole === 'admin') {
+    if (userRole === 'ADMIN') {
       router.push('/admin');
     } else {
       router.push('/dashboard');
