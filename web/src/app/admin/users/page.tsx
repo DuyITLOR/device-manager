@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { requireAuthAndRole } from '@/lib/utils/auth';
 import AdminNavigation from '@/components/admin/admin-navigation';
 import UsersTable from '@/components/admin/users-table';
+import CreateUserDialog from '@/components/admin/create-user-dialog';
 import type { User } from '@/lib/types/user';
 import { fetchAllUsers } from '@/lib/services/users';
 
@@ -18,25 +19,27 @@ const AdminUsersPage = () => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     const ok = requireAuthAndRole(router, toast, ['ADMIN']);
     setHasAccess(ok);
   }, [router, toast]);
 
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const list = await fetchAllUsers();
+      setMembers(list);
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi lấy danh sách người dùng';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadUsers = async () => {
-      setLoading(true);
-      try {
-        const list = await fetchAllUsers();
-        setMembers(list);
-      } catch (err: any) {
-        const msg = err?.message ?? 'Lỗi khi lấy danh sách người dùng';
-        toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
-      } finally {
-        setLoading(false);
-      }
-    };
     loadUsers();
   }, []);
 
@@ -66,7 +69,7 @@ const AdminUsersPage = () => {
                 <CardTitle>Member Management</CardTitle>
                 <CardDescription>Manage team members and permissions</CardDescription>
               </div>
-              <Button>
+              <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className='w-4 h-4 mr-2' />
                 Add Member
               </Button>
@@ -84,6 +87,8 @@ const AdminUsersPage = () => {
             </CardContent>
           )}
         </Card>
+
+        <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSuccess={loadUsers} />
       </div>
     </div>
   );
