@@ -5,10 +5,16 @@ import { Button } from '@/components/ui/button';
 import { LogOut, Package, List } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { clearUserInfo } from '@/lib/utils/auth';
 
 const UserNavigation = () => {
   const router = useRouter();
   const pathname = usePathname();
+
+  const handleLogout = () => {
+    router.push('/');
+    clearUserInfo();
+  };
 
   return (
     <div className='glass-card mb-6'>
@@ -41,7 +47,7 @@ const UserNavigation = () => {
             </div>
           </Link>
         </div>
-        <Button variant='outline' onClick={() => router.push('/')} className='glass-button'>
+        <Button variant='outline' onClick={handleLogout} className='glass-button'>
           <LogOut className='w-4 h-4 mr-2' />
           Logout
         </Button>
