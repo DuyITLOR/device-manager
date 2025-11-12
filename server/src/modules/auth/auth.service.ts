@@ -5,14 +5,13 @@ import { AUTH_MESSAGES, ROLES, Role } from '../../shared/constants';
 import { PrismaClient } from '@prisma/client';
 import { UsersService } from '../users/users.service';
 
-type User = { id: string; email: string; password: string; role: Role };
-
-const user: User[] = [];
+// type User = { id: string; email: string; password: string; role: Role };
 
 function throwAuthError(code: keyof typeof AUTH_MESSAGES): never {
   const err = AUTH_MESSAGES[code];
   throw new HttpException({ code, message: err.message }, err.status);
 }
+
 @Injectable()
 export class AuthService {
   private prisma = new PrismaClient();
@@ -31,7 +30,7 @@ export class AuthService {
     const exists = await this.users.findByEmail(dto.email);
     if (exists) throwAuthError('AUTH_DUPLICATE_EMAIL');
 
-    const user = await this.prisma.user.create({
+    const newUser = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: await hashPassword(dto.password),
@@ -45,10 +44,10 @@ export class AuthService {
       success: true,
       message: AUTH_MESSAGES.SIGNUP_SUCCESS.message,
       data: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
       },
     };
   }
