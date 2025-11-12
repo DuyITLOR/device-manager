@@ -13,6 +13,7 @@ interface ApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
+  meta?: Record<string, any>;
 }
 
 @Injectable()
@@ -29,6 +30,7 @@ export class ResponseInterceptor<T>
       map((data): ApiResponse<T> => {
         let message = 'Success';
         let responseData: T = data;
+        let meta: Record<string, any> | undefined = undefined;
 
         if (typeof data === 'object' && data !== null) {
           if (
@@ -39,8 +41,11 @@ export class ResponseInterceptor<T>
           }
 
           if ('data' in data) {
-            const d = (data as { data: T }).data;
-            responseData = d;
+            responseData = (data as { data: T }).data;
+          }
+
+          if ('meta' in data) {
+            meta = (data as { meta?: Record<string, any> }).meta;
           }
         }
 
@@ -48,6 +53,7 @@ export class ResponseInterceptor<T>
           status: res.statusCode ?? 200,
           success: true,
           message,
+          ...(meta ? { meta } : {}),
           data: responseData,
         };
       }),

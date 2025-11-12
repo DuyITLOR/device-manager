@@ -120,7 +120,13 @@ export class DevicesService {
       status: DEVICE_MESSAGES.DEVICE_QUERY_SUCCESS.status,
       success: true,
       message: DEVICE_MESSAGES.DEVICE_QUERY_SUCCESS.message,
-      meta: { total, page, limit },
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page < Math.ceil(total / limit),
+      },
       data,
     };
   }
