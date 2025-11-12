@@ -70,12 +70,12 @@ const AdminDashboard = () => {
         {/* Header */}
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
           <div>
-            <h1 className='text-3xl font-bold gradient-text'>Admin Dashboard</h1>
-            <p className='text-muted-foreground mt-1'>Manage devices, users, and system activity</p>
+            <h1 className='text-3xl font-bold gradient-text'>Bảng điều khiển Admin</h1>
+            <p className='text-muted-foreground mt-1'>Quản lý thiết bị, người dùng và hoạt động hệ thống</p>
           </div>
           <Button variant='outline' onClick={() => router.push('/')} className='glass-button'>
             <LogOut className='w-4 h-4 mr-2' />
-            Logout
+            Đăng xuất
           </Button>
         </div>
 
@@ -85,19 +85,19 @@ const AdminDashboard = () => {
           <CardHeader>
             <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
               <div>
-                <CardTitle>Device Management</CardTitle>
-                <CardDescription>Add, edit, and manage all equipment</CardDescription>
+                <CardTitle>Quản lý thiết bị</CardTitle>
+                <CardDescription>Thêm, chỉnh sửa và quản lý tất cả thiết bị</CardDescription>
               </div>
               <div className='flex gap-2'>
                 {selectedDevices.length > 0 && (
                   <Button variant='outline' onClick={handleExportQR} className='glass-button'>
                     <QrCode className='w-4 h-4 mr-2' />
-                    Export QR ({selectedDevices.length})
+                    Xuất QR ({selectedDevices.length})
                   </Button>
                 )}
                 <Button>
                   <Plus className='w-4 h-4 mr-2' />
-                  Add Device
+                  Thêm thiết bị
                 </Button>
               </div>
             </div>
@@ -107,7 +107,7 @@ const AdminDashboard = () => {
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
                 <Input
-                  placeholder='Search devices...'
+                  placeholder='Tìm kiếm thiết bị...'
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className='pl-10'
@@ -121,12 +121,12 @@ const AdminDashboard = () => {
                     <TableHead className='w-12'>
                       <input type='checkbox' className='rounded' aria-label='Chọn tất cả thiết bị' />
                     </TableHead>
-                    <TableHead>Device</TableHead>
-                    <TableHead>Serial Number</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Assigned To</TableHead>
-                    <TableHead>Last Activity</TableHead>
-                    <TableHead className='text-right'>Actions</TableHead>
+                    <TableHead>Thiết bị</TableHead>
+                    <TableHead>Số seri</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Người được gán</TableHead>
+                    <TableHead>Hoạt động cuối</TableHead>
+                    <TableHead className='text-right'>Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -144,7 +144,9 @@ const AdminDashboard = () => {
                       <TableCell className='font-medium'>{device.name}</TableCell>
                       <TableCell className='text-muted-foreground'>{device.serialNumber}</TableCell>
                       <TableCell>
-                        <Badge variant={device.status === 'available' ? 'secondary' : 'default'}>{device.status}</Badge>
+                        <Badge variant={device.status === 'available' ? 'secondary' : 'default'}>
+                          {device.status === 'available' ? 'Có sẵn' : 'Đang sử dụng'}
+                        </Badge>
                       </TableCell>
                       <TableCell>{device.assignedTo}</TableCell>
                       <TableCell className='text-muted-foreground'>{device.lastActivity}</TableCell>

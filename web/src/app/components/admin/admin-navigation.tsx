@@ -20,7 +20,7 @@ export default function AdminNavigation() {
         >
           <div className='flex items-center gap-2'>
             <Package className='w-4 h-4' />
-            <span>Devices</span>
+            <span>Thiết bị</span>
           </div>
         </Link>
         <Link
@@ -33,7 +33,7 @@ export default function AdminNavigation() {
         >
           <div className='flex items-center gap-2'>
             <Users className='w-4 h-4' />
-            <span>Users</span>
+            <span>Người dùng</span>
           </div>
         </Link>
         <Link
@@ -46,7 +46,7 @@ export default function AdminNavigation() {
         >
           <div className='flex items-center gap-2'>
             <History className='w-4 h-4' />
-            <span>Activity</span>
+            <span>Hoạt động</span>
           </div>
         </Link>
       </div>

@@ -16,10 +16,10 @@ export default function UsersTable({ users }: UsersTableProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>Tên</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead className='text-right'>Actions</TableHead>
+            <TableHead>Vai trò</TableHead>
+            <TableHead className='text-right'>Thao tác</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
