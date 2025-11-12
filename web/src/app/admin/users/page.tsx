@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { requireAuthAndRole } from '@/lib/utils/auth';
@@ -72,9 +72,17 @@ const AdminUsersPage = () => {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
-            <UsersTable users={members} />
-          </CardContent>
+          {loading ? (
+            <CardContent>
+              <div className='flex justify-center items-center h-48'>
+                <Loader2 className='w-6 h-6 animate-spin text-muted-foreground' />
+              </div>
+            </CardContent>
+          ) : (
+            <CardContent>
+              <UsersTable users={members} />
+            </CardContent>
+          )}
         </Card>
       </div>
     </div>
