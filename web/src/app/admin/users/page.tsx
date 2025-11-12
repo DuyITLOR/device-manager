@@ -51,12 +51,12 @@ const AdminUsersPage = () => {
       <div className='max-w-7xl mx-auto space-y-6'>
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
           <div>
-            <h1 className='text-3xl font-bold gradient-text'>Admin Dashboard</h1>
-            <p className='text-muted-foreground mt-1'>Manage devices, users, and system activity</p>
+            <h1 className='text-3xl font-bold gradient-text'>Bảng điều khiển Admin</h1>
+            <p className='text-muted-foreground mt-1'>Quản lý thiết bị, người dùng và hoạt động hệ thống</p>
           </div>
           <Button variant='outline' onClick={() => router.push('/')} className='glass-button'>
             <LogOut className='w-4 h-4 mr-2' />
-            Logout
+            Đăng xuất
           </Button>
         </div>
 
@@ -66,12 +66,12 @@ const AdminUsersPage = () => {
           <CardHeader>
             <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
               <div>
-                <CardTitle>Member Management</CardTitle>
-                <CardDescription>Manage team members and permissions</CardDescription>
+                <CardTitle>Quản lý người dùng</CardTitle>
+                <CardDescription>Quản lý người dùng và quyền hạn</CardDescription>
               </div>
               <Button onClick={() => setCreateDialogOpen(true)}>
                 <Plus className='w-4 h-4 mr-2' />
-                Add Member
+                Thêm người dùng
               </Button>
             </div>
           </CardHeader>

@@ -24,7 +24,7 @@ const AdminActivityPage = () => {
       type: 'Loan',
       user: 'John Doe',
       device: 'MacBook Pro 16"',
-      action: 'Borrowed device',
+      action: 'Đã mượn thiết bị',
       time: '2024-01-15 10:30',
     },
     {
@@ -32,7 +32,7 @@ const AdminActivityPage = () => {
       type: 'Transfer',
       user: 'Jane Smith',
       device: 'iPhone 15 Pro',
-      action: 'Accepted transfer',
+      action: 'Đã chấp nhận chuyển giao',
       time: '2024-01-15 09:15',
     },
     {
@@ -40,10 +40,20 @@ const AdminActivityPage = () => {
       type: 'Device',
       user: 'Admin User',
       device: 'iPad Air',
-      action: 'Added new device',
+      action: 'Đã thêm thiết bị mới',
       time: '2024-01-14 16:45',
     },
   ];
+
+  const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      Loan: 'Cho mượn',
+      Transfer: 'Chuyển giao',
+      Device: 'Thiết bị',
+      User: 'Người dùng',
+    };
+    return labels[type] || type;
+  };
 
   useEffect(() => {
     const ok = requireAuthAndRole(router, toast, ['ADMIN']);
@@ -59,12 +69,12 @@ const AdminActivityPage = () => {
         {/* Header */}
         <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
           <div>
-            <h1 className='text-3xl font-bold gradient-text'>Admin Dashboard</h1>
-            <p className='text-muted-foreground mt-1'>Manage devices, users, and system activity</p>
+            <h1 className='text-3xl font-bold gradient-text'>Bảng điều khiển Admin</h1>
+            <p className='text-muted-foreground mt-1'>Quản lý thiết bị, người dùng và hoạt động hệ thống</p>
           </div>
           <Button variant='outline' onClick={() => router.push('/')} className='glass-button'>
             <LogOut className='w-4 h-4 mr-2' />
-            Logout
+            Đăng xuất
           </Button>
         </div>
 
@@ -74,8 +84,8 @@ const AdminActivityPage = () => {
           <CardHeader>
             <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
               <div>
-                <CardTitle>Activity Log</CardTitle>
-                <CardDescription>Track all system activities and changes</CardDescription>
+                <CardTitle>Nhật ký hoạt động</CardTitle>
+                <CardDescription>Theo dõi tất cả hoạt động và thay đổi hệ thống</CardDescription>
               </div>
               <div className='flex gap-2'>
                 <Select defaultValue='all'>
@@ -83,16 +93,16 @@ const AdminActivityPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='all'>All Types</SelectItem>
-                    <SelectItem value='loan'>Loan</SelectItem>
-                    <SelectItem value='transfer'>Transfer</SelectItem>
-                    <SelectItem value='device'>Device</SelectItem>
-                    <SelectItem value='user'>User</SelectItem>
+                    <SelectItem value='all'>Tất cả loại</SelectItem>
+                    <SelectItem value='loan'>Cho mượn</SelectItem>
+                    <SelectItem value='transfer'>Chuyển giao</SelectItem>
+                    <SelectItem value='device'>Thiết bị</SelectItem>
+                    <SelectItem value='user'>Người dùng</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant='outline' className='glass-button'>
                   <Download className='w-4 h-4 mr-2' />
-                  Export
+                  Xuất file
                 </Button>
               </div>
             </div>
@@ -113,7 +123,7 @@ const AdminActivityPage = () => {
                   <div className='flex-1 min-w-0'>
                     <div className='flex items-center gap-2 flex-wrap'>
                       <Badge variant='outline' className='text-xs'>
-                        {activity.type}
+                        {getTypeLabel(activity.type)}
                       </Badge>
                       <span className='font-medium'>{activity.user}</span>
                       <span className='text-muted-foreground'>•</span>
