@@ -14,3 +14,22 @@ export type SigninResponse = {
     user: User;
   };
 };
+
+export type SignupDto = {
+  email: string;
+  password: string;
+  name: string;
+  role: 'USER' | 'ADMIN' | 'MANAGER';
+};
+
+export type SignupResponse = {
+  status: number;
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
+};
