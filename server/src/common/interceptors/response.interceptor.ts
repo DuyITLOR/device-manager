@@ -6,20 +6,51 @@ import {
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import type { Response } from 'express';
+
+interface ApiResponse<T> {
+  status: number;
+  success: boolean;
+  message: string;
+  data: T;
+}
 
 @Injectable()
-export class ResponseInterceptor<T> implements NestInterceptor<T, any> {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const ctx = context.switchToHttp();
-    const res = ctx.getResponse();
+export class ResponseInterceptor<T>
+  implements NestInterceptor<T, ApiResponse<T>>
+{
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler<T>,
+  ): Observable<ApiResponse<T>> {
+    const res = context.switchToHttp().getResponse<Response>();
 
     return next.handle().pipe(
-      map((data) => ({
-        status: res.statusCode || 200,
-        success: true,
-        message: data?.message || 'Success',
-        data: data?.data ?? data,
-      })),
+      map((data): ApiResponse<T> => {
+        let message = 'Success';
+        let responseData: T = data;
+
+        if (typeof data === 'object' && data !== null) {
+          if (
+            'message' in data &&
+            typeof (data as { message?: unknown }).message === 'string'
+          ) {
+            message = (data as { message: string }).message;
+          }
+
+          if ('data' in data) {
+            const d = (data as { data: T }).data;
+            responseData = d;
+          }
+        }
+
+        return {
+          status: res.statusCode ?? 200,
+          success: true,
+          message,
+          data: responseData,
+        };
+      }),
     );
   }
 }

@@ -1,7 +1,6 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client/extension';
+import { PrismaClient, Device, Prisma } from '@prisma/client';
 import { CreateDevicesDto } from '../devices/dto/createDevices.dto';
-import { DeviceStatus } from '@prisma/client';
 import { DEVICE_MESSAGES } from '../../shared/constants';
 import { updateStatus } from './dto/updateStatus.dto';
 import { QueryDeviceDto } from './dto/queryDevices.dto';
@@ -14,6 +13,11 @@ function throwDeviceError(code: keyof typeof DEVICE_MESSAGES): never {
 @Injectable()
 export class DevicesService {
   private prisma = new PrismaClient();
+
+  private sanitize(device: Device) {
+    const { id, name, description, status, createdAt } = device;
+    return { id, name, description, status, createdAt };
+  }
 
   async create(dto: CreateDevicesDto) {
     const exists = await this.prisma.device.findUnique({
@@ -41,7 +45,7 @@ export class DevicesService {
   }
 
   async findOne(id: string) {
-    const device = this.prisma.device.findUnique({
+    const device = await this.prisma.device.findUnique({
       where: {
         id,
       },
@@ -91,7 +95,7 @@ export class DevicesService {
 
   async findAll(query: QueryDeviceDto) {
     const { status, search, startDate, endDate, limit = 20, page = 1 } = query;
-    const where: any = {};
+    const where: Prisma.DeviceWhereInput = {};
     if (status) where.status = status;
     if (search) {
       where.name = { contains: search, mode: 'insensitive' as const };

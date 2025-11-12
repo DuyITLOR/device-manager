@@ -3,6 +3,12 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "resolvePackageJsonExports": true,
+
+    // 👇 Thêm 3 dòng này để TS nhận type CommonJS module
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "allowArbitraryExtensions": true,
+    "types": ["node"],
+
     "esModuleInterop": true,
     "isolatedModules": true,
     "declaration": true,

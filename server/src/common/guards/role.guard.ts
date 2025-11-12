@@ -5,25 +5,38 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
+
+interface UserPayload {
+  id: string;
+  email: string;
+  role: string;
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-  canActivate(ctx: ExecutionContext): boolean {
-    const required = this.reflector.getAllAndOverride<string[]>('roles', [
-      ctx.getHandler(),
-      ctx.getClass(),
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
+      context.getHandler(),
+      context.getClass(),
     ]);
-    if (!required || required.length === 0) return true;
 
-    const req = ctx.switchToHttp().getRequest();
+    if (!requiredRoles || requiredRoles.length === 0) return true;
+
+    const req = context
+      .switchToHttp()
+      .getRequest<Request & { user?: UserPayload }>();
     const user = req.user;
     if (!user) return false;
 
-    const ok = required.includes(user.role);
-    if (!ok)
+    if (!user) return false;
+
+    const hasRole = requiredRoles.includes(user.role);
+    if (!hasRole) {
       throw new ForbiddenException('Không đủ quyền truy cập tài nguyên này');
+    }
     return true;
   }
 }

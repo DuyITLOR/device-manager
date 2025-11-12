@@ -1,5 +1,5 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 import { USER_MESSAGES, ROLES, Role } from '../../shared/constants';
 import { createUserDto } from './dto/createUser.dto';
 import { hashPassword, comparePassword } from '../../shared/utils';
@@ -15,7 +15,7 @@ function throwUserError(code: keyof typeof USER_MESSAGES): never {
 export class UsersService {
   private prisma = new PrismaClient();
 
-  private sanitize(u: any) {
+  private sanitize(u: User) {
     const { id, code, name, email, role, createdAt } = u;
     return { id, code, name, email, role, createdAt };
   }
@@ -25,7 +25,7 @@ export class UsersService {
     const list = await this.prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return list.map(this.sanitize);
+    return list.map((u) => this.sanitize(u));
   }
 
   // Get one user by id
