@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 import { ROLES, Role } from '../../shared/constants';
 import { Roles, CurrentUser } from '../../common/decorators';
@@ -14,14 +15,15 @@ import { createUserDto } from './dto/createUser.dto';
 import { updateUserDto } from './dto/updateUser.dto';
 import { changePasswordDto } from './dto/changePassword.dto';
 import { updateRoleDto } from './dto/updateRole.dto';
-
+import { QueryUser } from './dto/queryUser.dto';
 @Controller('users')
 export class UsersController {
   constructor(private readonly users: UsersService) {}
+
   @Roles(ROLES.ADMIN, ROLES.MANAGER)
   @Get()
-  findAll() {
-    return this.users.findAll();
+  findAll(@Query() query: QueryUser) {
+    return this.users.findAll(query);
   }
 
   @Roles(ROLES.ADMIN, ROLES.MANAGER)
@@ -36,13 +38,10 @@ export class UsersController {
     return this.users.create(dto);
   }
 
+  @Roles(ROLES.ADMIN, ROLES.MANAGER)
   @Patch(':id')
-  updateProfile(
-    @Param('id') id: string,
-    @Body() dto: updateUserDto,
-    @CurrentUser() me: { id: string; role: Role },
-  ) {
-    return this.users.updateProfile(id, dto, me);
+  updateProfile(@Param('id') id: string, @Body() dto: updateUserDto) {
+    return this.users.updateProfile(id, dto);
   }
 
   @Patch(':id/change-password')
@@ -64,5 +63,11 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.users.delete(id);
+  }
+
+  @Roles(ROLES.ADMIN, ROLES.MANAGER)
+  @Patch(':id/reset')
+  resetPassword(@Param('id') id: string) {
+    return this.users.resetPassword(id);
   }
 }

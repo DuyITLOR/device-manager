@@ -1,11 +1,12 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, User, Prisma } from '@prisma/client';
 import { USER_MESSAGES, ROLES, Role } from '../../shared/constants';
 import { createUserDto } from './dto/createUser.dto';
 import { hashPassword, comparePassword } from '../../shared/utils';
 import { updateUserDto } from './dto/updateUser.dto';
 import { changePasswordDto } from './dto/changePassword.dto';
 import { updateRoleDto } from './dto/updateRole.dto';
+import { QueryUser } from './dto/queryUser.dto';
 
 function throwUserError(code: keyof typeof USER_MESSAGES): never {
   const err = USER_MESSAGES[code];
@@ -21,11 +22,36 @@ export class UsersService {
   }
 
   // Get all users
-  async findAll() {
-    const list = await this.prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    return list.map((u) => this.sanitize(u));
+  async findAll(query: QueryUser) {
+    const { code, name, role, limit = 20, page = 1 } = query;
+    const where: Prisma.UserWhereInput = {};
+    if (role) where.role = role;
+    if (name) where.name = { contains: name, mode: 'insensitive' as const };
+    if (code) where.code = { contains: code, mode: 'insensitive' as const };
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.user.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      status: USER_MESSAGES.USER_FETCH_SUCCESS.status,
+      success: true,
+      message: USER_MESSAGES.USER_FETCH_SUCCESS.message,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        hasMore: page < Math.ceil(total / limit),
+      },
+      data,
+    };
   }
 
   // Get one user by id
@@ -65,14 +91,7 @@ export class UsersService {
     };
   }
 
-  async updateProfile(
-    id: string,
-    dto: updateUserDto,
-    meta: { id: string; role: Role },
-  ) {
-    if (meta.role === ROLES.USER && meta.id === id)
-      throwUserError('USER_FORBIDDEN_UPDATE_OTHERS');
-
+  async updateProfile(id: string, dto: updateUserDto) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throwUserError('USER_NOT_FOUND');
 
@@ -81,6 +100,7 @@ export class UsersService {
       data: {
         name: dto.name ?? user.name,
         code: dto.code ?? user.code,
+        role: dto.role ?? user.role,
       },
     });
 
@@ -148,6 +168,22 @@ export class UsersService {
       status: USER_MESSAGES.USER_DELETE_SUCCESS.status,
       success: true,
       message: USER_MESSAGES.USER_DELETE_SUCCESS.message,
+    };
+  }
+
+  async resetPassword(id: string) {
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        password: await hashPassword('123456'),
+      },
+    });
+
+    return {
+      status: USER_MESSAGES.USER_UPDATE_SUCCESS.status,
+      success: true,
+      message: USER_MESSAGES.USER_UPDATE_SUCCESS.message,
+      data: this.sanitize(updated),
     };
   }
 }
