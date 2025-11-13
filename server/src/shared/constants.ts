@@ -37,6 +37,10 @@ export const USER_MESSAGES = {
     message: 'Cập nhật người dùng thành công',
   },
   USER_DELETE_SUCCESS: { status: 200, message: 'Xóa người dùng thành công' },
+  USER_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Lấy danh sách người dùng thành công',
+  },
 } as const;
 
 export const ROLES = {
