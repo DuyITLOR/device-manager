@@ -58,8 +58,9 @@ enum ActivityAction {
   TRANSFER_CANCEL
   DEVICE_CREATE
   DEVICE_UPDATE
-  AUTH_LOGIN
-  AUTH_LOGOUT
+  DEVICE_DELETE
+  USER_CREATE
+  USER_DELETE
 }
 
 
@@ -139,7 +140,7 @@ model ActivityLog {
   targetType ActivityTargetType
   targetId   String
   timestamp  DateTime @default(now())    
-  details    Json
+  details    Json?
 
   actor      User? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
 

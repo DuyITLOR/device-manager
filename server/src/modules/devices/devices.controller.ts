@@ -12,9 +12,9 @@ import { DevicesService } from './devices.service';
 import { CreateDevicesDto } from './dto/createDevices.dto';
 import { updateStatus } from './dto/updateStatus.dto';
 import { QueryDeviceDto } from './dto/queryDevices.dto';
-import { Roles } from '../../common/decorators';
-import { ROLES } from '../../shared/constants';
-
+import { Roles, CurrentUser } from '../../common/decorators';
+import { Role, ROLES } from '../../shared/constants';
+import { UpdateDeviceQueryDto } from './dto/updateDeviceQuery.dto';
 @Controller('devices')
 export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
@@ -31,18 +31,39 @@ export class DevicesController {
 
   @Roles(ROLES.ADMIN, ROLES.MANAGER)
   @Post()
-  async create(@Body() dto: CreateDevicesDto) {
-    return this.devicesService.create(dto);
+  async create(
+    @Body() dto: CreateDevicesDto,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.devicesService.create(dto, me.id);
   }
 
+  @Roles(ROLES.ADMIN, ROLES.MANAGER)
   @Patch(':id/status')
-  async updateStatus(@Param('id') id: string, @Body() dto: updateStatus) {
-    return this.devicesService.updateStatus(id, dto);
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: updateStatus,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.devicesService.updateStatus(id, dto, me.id);
+  }
+
+  @Roles(ROLES.ADMIN, ROLES.MANAGER)
+  @Patch(':id')
+  async updateInfor(
+    @Param('id') id: string,
+    @Query() query: UpdateDeviceQueryDto,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.devicesService.updateInfor(id, query, me.id);
   }
 
   @Roles(ROLES.ADMIN, ROLES.MANAGER)
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    return this.devicesService.delete(id);
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.devicesService.delete(id, me.id);
   }
 }

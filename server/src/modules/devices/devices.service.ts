@@ -1,6 +1,13 @@
 import { Injectable, HttpException } from '@nestjs/common';
-import { PrismaClient, Device, Prisma } from '@prisma/client';
+import {
+  PrismaClient,
+  Device,
+  Prisma,
+  ActivityTargetType,
+  ActivityAction,
+} from '@prisma/client';
 import { CreateDevicesDto } from '../devices/dto/createDevices.dto';
+import { UpdateDeviceQueryDto } from './dto/updateDeviceQuery.dto';
 import { DEVICE_MESSAGES } from '../../shared/constants';
 import { updateStatus } from './dto/updateStatus.dto';
 import { QueryDeviceDto } from './dto/queryDevices.dto';
@@ -19,20 +26,25 @@ export class DevicesService {
     return { id, name, description, status, createdAt };
   }
 
-  async create(dto: CreateDevicesDto) {
-    const exists = await this.prisma.device.findUnique({
-      where: {
-        id: dto.id,
-      },
-    });
-    if (exists) throwDeviceError('DEVICE_DUPLICATE_ID');
-
+  async create(dto: CreateDevicesDto, actorId: string) {
     const device = await this.prisma.device.create({
       data: {
-        id: dto.id,
         name: dto.name,
         description: dto.description ?? '',
         status: dto.status,
+      },
+    });
+
+    await this.prisma.activityLog.create({
+      data: {
+        actorId,
+        action: ActivityAction.DEVICE_CREATE,
+        targetType: ActivityTargetType.Device,
+        targetId: device.id,
+        details: {
+          name: device.name,
+          status: device.status,
+        },
       },
     });
 
@@ -63,13 +75,26 @@ export class DevicesService {
     };
   }
 
-  async updateStatus(id: string, dto: updateStatus) {
+  async updateStatus(id: string, dto: updateStatus, actorId: string) {
     const existing = await this.prisma.device.findUnique({ where: { id } });
     if (!existing) throwDeviceError('DEVICE_NOT_FOUND');
 
     const updated = await this.prisma.device.update({
       where: { id },
       data: { status: dto.status },
+    });
+
+    await this.prisma.activityLog.create({
+      data: {
+        actorId,
+        action: ActivityAction.DEVICE_UPDATE,
+        targetType: ActivityTargetType.Device,
+        targetId: id,
+        details: {
+          name: updated.name,
+          status: updated.status,
+        },
+      },
     });
 
     return {
@@ -80,11 +105,20 @@ export class DevicesService {
     };
   }
 
-  async delete(id: string) {
+  async delete(id: string, actorId: string) {
     const existing = await this.prisma.device.findUnique({ where: { id } });
     if (!existing) throwDeviceError('DEVICE_NOT_FOUND');
 
     await this.prisma.device.delete({ where: { id } });
+
+    await this.prisma.activityLog.create({
+      data: {
+        actorId,
+        action: ActivityAction.DEVICE_DELETE,
+        targetType: ActivityTargetType.Device,
+        targetId: id,
+      },
+    });
 
     return {
       status: DEVICE_MESSAGES.DEVICE_DELETE_SUCCESS.status,
@@ -128,6 +162,36 @@ export class DevicesService {
         hasMore: page < Math.ceil(total / limit),
       },
       data,
+    };
+  }
+
+  async updateInfor(id: string, query: UpdateDeviceQueryDto, actorId: string) {
+    const existed = await this.prisma.device.findUnique({ where: { id } });
+    if (!existed) throwDeviceError('DEVICE_NOT_FOUND');
+
+    const updated = await this.prisma.device.update({
+      where: { id },
+      data: {
+        name: query.name ?? existed.name,
+        description: query.description ?? existed.description,
+        status: query.status ?? existed.status,
+      },
+    });
+
+    await this.prisma.activityLog.create({
+      data: {
+        actorId,
+        action: ActivityAction.DEVICE_UPDATE,
+        targetType: ActivityTargetType.Device,
+        targetId: id,
+      },
+    });
+
+    return {
+      status: DEVICE_MESSAGES.DEVICE_UPDATE_SUCCESS.status,
+      success: true,
+      message: DEVICE_MESSAGES.DEVICE_UPDATE_SUCCESS.message,
+      data: updated,
     };
   }
 }
