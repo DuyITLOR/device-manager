@@ -7,10 +7,10 @@ import {
   ActivityAction,
 } from '@prisma/client';
 import { CreateDevicesDto } from '../devices/dto/createDevices.dto';
-import { UpdateDeviceQueryDto } from './dto/updateDeviceQuery.dto';
 import { DEVICE_MESSAGES } from '../../shared/constants';
 import { updateStatus } from './dto/updateStatus.dto';
 import { QueryDeviceDto } from './dto/queryDevices.dto';
+import { UpdateDevices } from './dto/updateDevices.dto';
 
 function throwDeviceError(code: keyof typeof DEVICE_MESSAGES): never {
   const err = DEVICE_MESSAGES[code];
@@ -165,16 +165,14 @@ export class DevicesService {
     };
   }
 
-  async updateInfor(id: string, query: UpdateDeviceQueryDto, actorId: string) {
+  async updateInfor(id: string, dto: UpdateDevices, actorId: string) {
     const existed = await this.prisma.device.findUnique({ where: { id } });
     if (!existed) throwDeviceError('DEVICE_NOT_FOUND');
 
     const updated = await this.prisma.device.update({
       where: { id },
       data: {
-        name: query.name ?? existed.name,
-        description: query.description ?? existed.description,
-        status: query.status ?? existed.status,
+        ...dto,
       },
     });
 

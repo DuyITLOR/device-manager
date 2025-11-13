@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { DeviceStatus } from '@prisma/client';
 
-export class UpdateDevicesDto {
+export class UpdateDevices {
   @IsString()
   @IsOptional()
   name?: string;
