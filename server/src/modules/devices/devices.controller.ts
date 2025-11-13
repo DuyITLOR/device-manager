@@ -14,7 +14,7 @@ import { updateStatus } from './dto/updateStatus.dto';
 import { QueryDeviceDto } from './dto/queryDevices.dto';
 import { Roles, CurrentUser } from '../../common/decorators';
 import { Role, ROLES } from '../../shared/constants';
-import { UpdateDeviceQueryDto } from './dto/updateDeviceQuery.dto';
+import { UpdateDevices } from './dto/updateDevices.dto';
 @Controller('devices')
 export class DevicesController {
   constructor(private readonly devicesService: DevicesService) {}
@@ -52,7 +52,7 @@ export class DevicesController {
   @Patch(':id')
   async updateInfor(
     @Param('id') id: string,
-    @Query() query: UpdateDeviceQueryDto,
+    @Body() query: UpdateDevices,
     @CurrentUser() me: { id: string; role: Role },
   ) {
     return this.devicesService.updateInfor(id, query, me.id);

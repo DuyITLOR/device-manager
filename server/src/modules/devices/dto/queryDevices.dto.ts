@@ -1,5 +1,5 @@
 import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { DeviceStatus } from '@prisma/client';
 export class QueryDeviceDto {
   @IsOptional()
@@ -7,6 +7,9 @@ export class QueryDeviceDto {
   status?: DeviceStatus;
 
   @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? decodeURIComponent(value) : undefined,
+  )
   @IsString()
   search?: string;
 
