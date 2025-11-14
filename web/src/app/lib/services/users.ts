@@ -64,3 +64,28 @@ export async function updateUser(id: string, dto: UpdateUserDto) {
     throw err;
   }
 }
+
+export async function deleteUser(id: string) {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE_URL}/api/users/${id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      const msg = json?.message ?? json?.error ?? 'Failed to delete user';
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = json;
+      throw err;
+    }
+    return json?.data ?? json;
+  } catch (e: any) {
+    const msg = e?.message ?? 'Lỗi khi kết nối đến server';
+    const err: any = new Error(msg);
+    err.status = e?.status ?? (e instanceof TypeError ? 0 : 500);
+    err.data = e?.data ?? null;
+    throw err;
+  }
+}

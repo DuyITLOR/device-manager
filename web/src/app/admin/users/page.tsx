@@ -12,7 +12,7 @@ import UsersTable from '@/components/admin/users-table';
 import CreateUserDialog from '@/components/admin/create-user-dialog';
 import EditUserDialog from '@/components/admin/edit-user-dialog';
 import type { User } from '@/lib/types/user';
-import { fetchAllUsers } from '@/lib/services/users';
+import { fetchAllUsers, deleteUser } from '@/lib/services/users';
 
 const AdminUsersPage = () => {
   const router = useRouter();
@@ -39,6 +39,19 @@ const AdminUsersPage = () => {
       toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa người dùng này không?');
+    if (!confirmed) return;
+    try {
+      await deleteUser(userId);
+      toast({ title: 'Thành công', description: 'Đã xóa người dùng', variant: 'success' });
+      loadUsers();
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi xóa người dùng';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
     }
   };
 
@@ -90,9 +103,9 @@ const AdminUsersPage = () => {
                 users={members}
                 onEdit={(u) => {
                   setEditingUser(u);
-                  console.log(u);
                   setEditDialogOpen(true);
                 }}
+                onDelete={handleDeleteUser}
               />
             </CardContent>
           )}
@@ -106,7 +119,6 @@ const AdminUsersPage = () => {
           onSuccess={(updated: User) => {
             setEditDialogOpen(false);
             setEditingUser(null);
-            loadUsers();
           }}
         />
       </div>

@@ -9,9 +9,10 @@ import type { User } from '@/lib/types/user';
 interface UsersTableProps {
   users: User[];
   onEdit?: (user: User) => void;
+  onDelete?: (userId: string) => void;
 }
 
-export default function UsersTable({ users, onEdit }: UsersTableProps) {
+export default function UsersTable({ users, onEdit, onDelete }: UsersTableProps) {
   return (
     <div className='rounded-lg border overflow-hidden'>
       <Table>
@@ -38,7 +39,7 @@ export default function UsersTable({ users, onEdit }: UsersTableProps) {
                   <Button size='sm' variant='ghost' onClick={() => onEdit?.(member)}>
                     <Edit className='w-4 h-4' />
                   </Button>
-                  <Button size='sm' variant='ghost'>
+                  <Button size='sm' variant='ghost' onClick={() => onDelete?.(member.id)}>
                     <Trash2 className='w-4 h-4' />
                   </Button>
                 </div>
