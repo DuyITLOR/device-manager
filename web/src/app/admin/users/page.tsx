@@ -10,6 +10,7 @@ import { requireAuthAndRole } from '@/lib/utils/auth';
 import AdminNavigation from '@/components/admin/admin-navigation';
 import UsersTable from '@/components/admin/users-table';
 import CreateUserDialog from '@/components/admin/create-user-dialog';
+import EditUserDialog from '@/components/admin/edit-user-dialog';
 import type { User } from '@/lib/types/user';
 import { fetchAllUsers } from '@/lib/services/users';
 
@@ -20,6 +21,8 @@ const AdminUsersPage = () => {
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   useEffect(() => {
     const ok = requireAuthAndRole(router, toast, ['ADMIN']);
@@ -83,12 +86,29 @@ const AdminUsersPage = () => {
             </CardContent>
           ) : (
             <CardContent>
-              <UsersTable users={members} />
+              <UsersTable
+                users={members}
+                onEdit={(u) => {
+                  setEditingUser(u);
+                  console.log(u);
+                  setEditDialogOpen(true);
+                }}
+              />
             </CardContent>
           )}
         </Card>
 
         <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSuccess={loadUsers} />
+        <EditUserDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          user={editingUser}
+          onSuccess={(updated: User) => {
+            setEditDialogOpen(false);
+            setEditingUser(null);
+            loadUsers();
+          }}
+        />
       </div>
     </div>
   );

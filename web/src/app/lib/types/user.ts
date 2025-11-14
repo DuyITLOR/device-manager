@@ -6,3 +6,9 @@ export type User = {
   role: string;
   createdAt?: Date;
 };
+
+export type UpdateUserDto = {
+  name?: string;
+  code?: string;
+  role?: string;
+};
