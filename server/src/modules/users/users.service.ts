@@ -35,6 +35,13 @@ export class UsersService {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          email: true,
+          role: true,
+        },
       }),
       this.prisma.user.count({ where }),
     ]);
