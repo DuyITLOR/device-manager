@@ -10,8 +10,9 @@ import { requireAuthAndRole } from '@/lib/utils/auth';
 import AdminNavigation from '@/components/admin/admin-navigation';
 import UsersTable from '@/components/admin/users-table';
 import CreateUserDialog from '@/components/admin/create-user-dialog';
+import EditUserDialog from '@/components/admin/edit-user-dialog';
 import type { User } from '@/lib/types/user';
-import { fetchAllUsers } from '@/lib/services/users';
+import { fetchAllUsers, deleteUser } from '@/lib/services/users';
 
 const AdminUsersPage = () => {
   const router = useRouter();
@@ -20,6 +21,8 @@ const AdminUsersPage = () => {
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   useEffect(() => {
     const ok = requireAuthAndRole(router, toast, ['ADMIN']);
@@ -36,6 +39,19 @@ const AdminUsersPage = () => {
       toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa người dùng này không?');
+    if (!confirmed) return;
+    try {
+      await deleteUser(userId);
+      toast({ title: 'Thành công', description: 'Đã xóa người dùng', variant: 'success' });
+      loadUsers();
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi xóa người dùng';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
     }
   };
 
@@ -83,12 +99,28 @@ const AdminUsersPage = () => {
             </CardContent>
           ) : (
             <CardContent>
-              <UsersTable users={members} />
+              <UsersTable
+                users={members}
+                onEdit={(u) => {
+                  setEditingUser(u);
+                  setEditDialogOpen(true);
+                }}
+                onDelete={handleDeleteUser}
+              />
             </CardContent>
           )}
         </Card>
 
         <CreateUserDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSuccess={loadUsers} />
+        <EditUserDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          user={editingUser}
+          onSuccess={(updated: User) => {
+            setEditDialogOpen(false);
+            setEditingUser(null);
+          }}
+        />
       </div>
     </div>
   );
