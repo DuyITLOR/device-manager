@@ -36,7 +36,7 @@ export default function EditUserDialog({ open, onOpenChange, user, onSuccess }: 
     setSaving(true);
     try {
       const updated = await updateUser(user.id, { name, code, role });
-      toast({ title: 'Cập nhật thành công' });
+      toast({ title: 'Cập nhật thành công', variant: 'success' });
       onOpenChange(false);
       onSuccess?.(updated as User);
     } catch (err: any) {

@@ -39,7 +39,7 @@ const Login = () => {
 
       handleNavigation();
 
-      toast({ title: 'Đăng nhập thành công', description: `Xin chào ${res.data.user?.name}` });
+      toast({ title: 'Đăng nhập thành công', description: `Xin chào ${res.data.user?.name}`, variant: 'success' });
     } catch (error: any) {
       console.error('Login failed:', error);
       let msg = error?.message ?? error?.data?.message ?? 'Đăng nhập thất bại. Vui lòng thử lại.';
