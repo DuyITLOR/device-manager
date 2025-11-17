@@ -11,6 +11,7 @@ import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { requireAuthAndRole } from '@/lib/utils/auth';
 import AdminNavigation from '@/components/admin/admin-navigation';
+import AdminHeader from '@/components/layout/admin-header';
 
 const AdminActivityPage = () => {
   const router = useRouter();
@@ -66,17 +67,7 @@ const AdminActivityPage = () => {
   return (
     <div className='min-h-screen p-4 md:p-8'>
       <div className='max-w-7xl mx-auto space-y-6'>
-        {/* Header */}
-        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-          <div>
-            <h1 className='text-3xl font-bold gradient-text'>Bảng điều khiển Admin</h1>
-            <p className='text-muted-foreground mt-1'>Quản lý thiết bị, người dùng và hoạt động hệ thống</p>
-          </div>
-          <Button variant='outline' onClick={() => router.push('/')} className='glass-button'>
-            <LogOut className='w-4 h-4 mr-2' />
-            Đăng xuất
-          </Button>
-        </div>
+        <AdminHeader />
 
         <AdminNavigation />
 
@@ -143,4 +134,3 @@ const AdminActivityPage = () => {
 };
 
 export default AdminActivityPage;
-
