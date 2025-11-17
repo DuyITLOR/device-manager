@@ -1,11 +1,23 @@
-import type { User, UpdateUserDto } from '../types/user';
+import type { User, UpdateUserDto, UserParams, UserListResponse } from '../types/user';
 import { API_BASE_URL } from '../constant/api';
 import { getToken } from '../utils/auth';
 
-export async function fetchAllUsers(): Promise<User[]> {
+export async function fetchAllUsers(params?: UserParams): Promise<UserListResponse> {
   try {
     const token = getToken();
-    const res = await fetch(`${API_BASE_URL}/api/users`, {
+    const query = new URLSearchParams();
+    if (params) {
+      if (params.role) query.append('role', params.role);
+      if (params.name) query.append('name', params.name);
+      if (params.code) query.append('code', params.code);
+      if (params.limit) query.append('limit', params.limit.toString());
+      if (params.page) query.append('page', params.page.toString());
+    }
+
+    const queryString = query.toString();
+    const url = `${API_BASE_URL}/api/users${queryString ? `?${queryString}` : ''}`;
+
+    const res = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     });
@@ -20,9 +32,26 @@ export async function fetchAllUsers(): Promise<User[]> {
       throw err;
     }
 
-    const list: any = Array.isArray(json) ? json : json?.data ?? [];
+    if (json?.data && json?.meta) {
+      return json as UserListResponse;
+    }
 
-    return list as User[];
+    const data: User[] = Array.isArray(json) ? json : json?.data ?? [];
+    const meta = json?.meta ?? {
+      total: data.length,
+      page: params?.page ?? 1,
+      limit: params?.limit ?? data.length,
+      totalPages: params?.limit ? Math.max(1, Math.ceil(data.length / params.limit)) : 1,
+      hasMore: false,
+    };
+
+    return {
+      status: json?.status ?? res.status,
+      success: json?.success ?? true,
+      message: json?.message ?? 'Lấy danh sách người dùng thành công',
+      meta,
+      data,
+    };
   } catch (e: any) {
     const msg = e?.message ?? 'Lỗi khi kết nối đến server';
     const err: any = new Error(msg);
