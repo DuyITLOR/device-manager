@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Loader2 } from 'lucide-react';
@@ -24,7 +24,7 @@ interface FilterFormData {
   role: string;
 }
 
-const AdminUsersPage = () => {
+function AdminUsersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -178,6 +178,18 @@ const AdminUsersPage = () => {
       </div>
     </div>
   );
-};
+}
 
-export default AdminUsersPage;
+export default function AdminUsersPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='min-h-screen flex items-center justify-center'>
+          <Loader2 className='w-8 h-8 animate-spin text-primary' />
+        </div>
+      }
+    >
+      <AdminUsersContent />
+    </Suspense>
+  );
+}
