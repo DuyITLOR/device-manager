@@ -20,7 +20,7 @@ export default function UsersTable({ users, onEdit, onDelete }: UsersTableProps)
           <TableRow>
             <TableHead>Tên</TableHead>
             <TableHead>Code</TableHead>
-            <TableHead>Email</TableHead>
+            <TableHead className='hidden md:table-cell'>Email</TableHead>
             <TableHead>Vai trò</TableHead>
             <TableHead className='text-right'>Thao tác</TableHead>
           </TableRow>
@@ -30,7 +30,7 @@ export default function UsersTable({ users, onEdit, onDelete }: UsersTableProps)
             <TableRow key={member.id}>
               <TableCell className='font-medium'>{member.name}</TableCell>
               <TableCell className='text-muted-foreground'>{member.code}</TableCell>
-              <TableCell className='text-muted-foreground'>{member.email}</TableCell>
+              <TableCell className=' hidden md:table-cell text-muted-foreground'>{member.email}</TableCell>
               <TableCell>
                 <Badge variant={member.role === 'ADMIN' ? 'default' : 'secondary'}>{member.role}</Badge>
               </TableCell>
