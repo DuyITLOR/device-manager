@@ -13,7 +13,7 @@ interface UsersPaginationProps {
   onPageChange: (page: number) => void;
 }
 
-export default function UsersPagination({ currentPage, totalPages, onPageChange }: UsersPaginationProps) {
+export default function PaginationComponent({ currentPage, totalPages, onPageChange }: UsersPaginationProps) {
   return (
     <div className='mt-6'>
       <Pagination>
