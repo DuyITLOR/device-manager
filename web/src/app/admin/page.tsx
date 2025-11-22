@@ -11,11 +11,18 @@ import { requireAuthAndRole } from '@/lib/utils/auth';
 import AdminNavigation from '@/components/admin/admin-navigation';
 import AdminHeader from '@/components/layout/admin-header';
 import DeviceTable from '@/components/device/device-table';
-import { Device, DeviceParams } from '@/lib/types/device';
+import { Device, DeviceParams, DeviceStatus } from '@/lib/types/device';
 import { fetchAllDevices } from '@/lib/services/devices';
 import { Loading } from '@/components/ui/loading';
 import UsersPagination from '@/components/ui/pagination-component';
 import PaginationComponent from '@/components/ui/pagination-component';
+import DeviceFilterForm from '@/components/device/device-filter-form';
+import { useForm } from 'react-hook-form';
+
+interface FilterFormData {
+  name: string;
+  status: string;
+}
 
 const AdminDashboard = () => {
   const router = useRouter();
@@ -29,6 +36,24 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [curPage, setCurPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const { register, handleSubmit, setValue, watch } = useForm<FilterFormData>({
+    defaultValues: {
+      name: searchParams.get('name') || '',
+      status: searchParams.get('status') || '',
+    },
+  });
+
+  const statusValue = watch('status');
+
+  const onSubmit = (data: FilterFormData) => {
+    const params = new URLSearchParams();
+    if (data.name) params.set('name', data.name);
+    if (data.status && data.status !== 'all') params.set('status', data.status);
+    params.set('page', '1');
+    setCurPage(1);
+    router.replace(`?${params.toString()}`);
+  };
 
   const handleExportQR = () => {
     console.log('Exporting QR codes for devices:', selectedDevices);
@@ -50,12 +75,19 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const params: DeviceParams = {
-        limit: 5,
+        limit: 10,
         page: curPage,
+        name: searchParams.get('name') || '',
       };
+
+      const statusParam = searchParams.get('status') || '';
+      if (statusParam && statusParam !== 'all') {
+        params.status = statusParam as DeviceStatus;
+      }
+
       const res = await fetchAllDevices(params);
       setDevices(res.data);
-      setTotalPages(res.meta.totalPages);
+      setTotalPages(res.meta.totalPages || 1);
     } catch (err: any) {
       const msg = err?.message ?? 'Lỗi khi tải danh sách người dùng';
       toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
@@ -67,6 +99,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (hasAccess) loadDevices();
   }, [loadDevices, hasAccess]);
+
 
   if (hasAccess === null) return null;
   if (hasAccess === false) return null;
@@ -97,6 +130,14 @@ const AdminDashboard = () => {
                 </Button>
               </div>
             </div>
+
+            <DeviceFilterForm
+              register={register}
+              handleSubmit={handleSubmit}
+              setValue={setValue}
+              statusValue={statusValue}
+              onSubmit={onSubmit}
+            />
           </CardHeader>
           {loading ? (
             <CardContent>
