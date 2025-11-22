@@ -14,10 +14,10 @@ import DeviceTable from '@/components/device/device-table';
 import { Device, DeviceParams, DeviceStatus } from '@/lib/types/device';
 import { fetchAllDevices } from '@/lib/services/devices';
 import { Loading } from '@/components/ui/loading';
-import UsersPagination from '@/components/ui/pagination-component';
 import PaginationComponent from '@/components/ui/pagination-component';
 import DeviceFilterForm from '@/components/device/device-filter-form';
 import { useForm } from 'react-hook-form';
+import CreateDeviceDialog from '@/components/device/create-device-dialog';
 
 interface FilterFormData {
   name: string;
@@ -31,6 +31,7 @@ const AdminDashboard = () => {
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -100,7 +101,6 @@ const AdminDashboard = () => {
     if (hasAccess) loadDevices();
   }, [loadDevices, hasAccess]);
 
-
   if (hasAccess === null) return null;
   if (hasAccess === false) return null;
 
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
                     Xuất QR ({selectedDevices.length})
                   </Button>
                 )}
-                <Button>
+                <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className='w-4 h-4 mr-2' />
                   Thêm thiết bị
                 </Button>
@@ -150,6 +150,15 @@ const AdminDashboard = () => {
             </CardContent>
           )}
         </Card>
+
+        <CreateDeviceDialog
+          isOpen={createDialogOpen}
+          onClose={() => setCreateDialogOpen(false)}
+          onDeviceCreated={() => {
+            setCreateDialogOpen(false);
+            loadDevices();
+          }}
+        />
       </div>
     </div>
   );

@@ -14,6 +14,12 @@ export type Device = {
   createdAt?: string;
 };
 
+export type CreateDevicesDto = {
+  name: string;
+  description?: string;
+  status: DeviceStatus;
+};
+
 export type DeviceListResponse = {
   status: number;
   success: boolean;

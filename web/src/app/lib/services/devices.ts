@@ -1,4 +1,4 @@
-import type { DeviceListResponse, DeviceParams } from '../types/device';
+import type { CreateDevicesDto, Device, DeviceListResponse, DeviceParams } from '../types/device';
 import { API_BASE_URL } from '../constant/api';
 import { getToken } from '../utils/auth';
 
@@ -29,6 +29,34 @@ export async function fetchAllDevices(params?: DeviceParams): Promise<DeviceList
     }
 
     return json as DeviceListResponse;
+  } catch (e: any) {
+    const msg = e?.message ?? 'Lỗi khi kết nối đến server';
+    const err: any = new Error(msg);
+    err.status = e?.status ?? (e instanceof TypeError ? 0 : 500);
+    err.data = e?.data ?? null;
+    throw err;
+  }
+}
+
+export async function createDevice(payload: CreateDevicesDto): Promise<Device> {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE_URL}/api/devices`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (!res.ok) {
+      const msg = json?.message ?? json?.error ?? 'Failed to create device';
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = json;
+      throw err;
+    }
+
+    return json as Device;
   } catch (e: any) {
     const msg = e?.message ?? 'Lỗi khi kết nối đến server';
     const err: any = new Error(msg);
