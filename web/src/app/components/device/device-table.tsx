@@ -7,7 +7,11 @@ import { Edit, Trash2 } from 'lucide-react';
 import type { Device } from '@/lib/types/device';
 import { DEVICE_STATUS_MAP, DEVICE_STATUS_VARIANTS } from '@/lib/mapper/deviceStatus';
 
-export default function DeviceTable({ devices }: { devices: Device[] }) {
+interface DeviceTableProps {
+  devices: Device[];
+  onDelete?: (deviceId: string) => void;
+}
+export default function DeviceTable({ devices, onDelete }: DeviceTableProps) {
   return (
     <div className='rounded-lg border overflow-hidden'>
       <Table>
@@ -32,7 +36,7 @@ export default function DeviceTable({ devices }: { devices: Device[] }) {
                   <Button size='sm' variant='ghost'>
                     <Edit className='w-4 h-4' />
                   </Button>
-                  <Button size='sm' variant='ghost'>
+                  <Button size='sm' variant='ghost' onClick={() => onDelete?.(device.id)}>
                     <Trash2 className='w-4 h-4' />
                   </Button>
                 </div>

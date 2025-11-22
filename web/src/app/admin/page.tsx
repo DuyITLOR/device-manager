@@ -12,7 +12,7 @@ import AdminNavigation from '@/components/admin/admin-navigation';
 import AdminHeader from '@/components/layout/admin-header';
 import DeviceTable from '@/components/device/device-table';
 import { Device, DeviceParams, DeviceStatus } from '@/lib/types/device';
-import { fetchAllDevices } from '@/lib/services/devices';
+import { deleteDevice, fetchAllDevices } from '@/lib/services/devices';
 import { Loading } from '@/components/ui/loading';
 import PaginationComponent from '@/components/ui/pagination-component';
 import DeviceFilterForm from '@/components/device/device-filter-form';
@@ -65,6 +65,19 @@ const AdminDashboard = () => {
     params.set('page', page.toString());
     setCurPage(page);
     router.replace(`?${params.toString()}`);
+  };
+
+  const handleDeleteDevices = async (deviceId: string) => {
+    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa thiết bị này?');
+    if (!confirmed) return;
+    try {
+      await deleteDevice(deviceId);
+      toast({ title: 'Thành công', description: 'Đã xóa thiết bị thành công.' });
+      loadDevices();
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi xóa thiết bị';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+    }
   };
 
   useEffect(() => {
@@ -145,7 +158,7 @@ const AdminDashboard = () => {
             </CardContent>
           ) : (
             <CardContent>
-              <DeviceTable devices={devices} />
+              <DeviceTable devices={devices} onDelete={handleDeleteDevices} />
               <PaginationComponent currentPage={curPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </CardContent>
           )}
