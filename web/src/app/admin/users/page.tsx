@@ -14,9 +14,11 @@ import UsersTable from '@/components/admin/users-table';
 import CreateUserDialog from '@/components/admin/create-user-dialog';
 import EditUserDialog from '@/components/admin/edit-user-dialog';
 import UserFilterForm from '@/components/user/user-filter-form';
-import UsersPagination from '@/components/user/users-pagination';
+import UsersPagination from '@/components/ui/pagination-component';
 import type { User, UserParams } from '@/lib/types/user';
 import { fetchAllUsers, deleteUser } from '@/lib/services/users';
+import { Loading } from '@/components/ui/loading';
+import PaginationComponent from '@/components/ui/pagination-component';
 
 interface FilterFormData {
   name: string;
@@ -143,10 +145,7 @@ function AdminUsersContent() {
 
           {loading ? (
             <CardContent>
-              <div className='flex flex-col justify-center items-center h-64 space-y-4'>
-                <Loader2 className='w-8 h-8 animate-spin text-primary' />
-                <p className='text-sm text-muted-foreground'>Đang tải dữ liệu...</p>
-              </div>
+              <Loading />
             </CardContent>
           ) : (
             <CardContent>
@@ -159,7 +158,7 @@ function AdminUsersContent() {
                 onDelete={handleDeleteUser}
               />
 
-              <UsersPagination currentPage={curPage} totalPages={totalPages} onPageChange={handlePageChange} />
+              <PaginationComponent currentPage={curPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </CardContent>
           )}
         </Card>
