@@ -25,6 +25,6 @@ export type DeviceListResponse = {
 export type DeviceParams = {
   limit?: number;
   page?: number;
-  status?: DeviceStatus;
-  search?: string;
+  status?: DeviceStatus | '';
+  name?: string;
 };
