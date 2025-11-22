@@ -8,7 +8,7 @@ export async function fetchAllDevices(params?: DeviceParams): Promise<DeviceList
     const query = new URLSearchParams();
     if (params) {
       if (params.status) query.append('status', params.status);
-      if (params.search) query.append('search', params.search);
+      if (params.name) query.append('name', params.name);
       if (params.limit) query.append('limit', params.limit.toString());
       if (params.page) query.append('page', params.page.toString());
     }
