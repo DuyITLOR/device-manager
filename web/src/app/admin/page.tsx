@@ -18,6 +18,7 @@ import PaginationComponent from '@/components/ui/pagination-component';
 import DeviceFilterForm from '@/components/device/device-filter-form';
 import { useForm } from 'react-hook-form';
 import CreateDeviceDialog from '@/components/device/create-device-dialog';
+import EditDeviceDialog from '@/components/device/edit-device-dialog';
 
 interface FilterFormData {
   name: string;
@@ -32,6 +33,8 @@ const AdminDashboard = () => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null);
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -158,7 +161,14 @@ const AdminDashboard = () => {
             </CardContent>
           ) : (
             <CardContent>
-              <DeviceTable devices={devices} onDelete={handleDeleteDevices} />
+              <DeviceTable
+                devices={devices}
+                onDelete={handleDeleteDevices}
+                onEdit={(device) => {
+                  setEditingDevice(device);
+                  setEditDialogOpen(true);
+                }}
+              />
               <PaginationComponent currentPage={curPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </CardContent>
           )}
@@ -169,6 +179,16 @@ const AdminDashboard = () => {
           onClose={() => setCreateDialogOpen(false)}
           onDeviceCreated={() => {
             setCreateDialogOpen(false);
+            loadDevices();
+          }}
+        />
+        <EditDeviceDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          device={editingDevice}
+          onSuccess={() => {
+            setEditingDevice(null);
+            setEditDialogOpen(false);
             loadDevices();
           }}
         />

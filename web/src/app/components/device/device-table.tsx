@@ -10,8 +10,9 @@ import { DEVICE_STATUS_MAP, DEVICE_STATUS_VARIANTS } from '@/lib/mapper/deviceSt
 interface DeviceTableProps {
   devices: Device[];
   onDelete?: (deviceId: string) => void;
+  onEdit?: (device: Device) => void;
 }
-export default function DeviceTable({ devices, onDelete }: DeviceTableProps) {
+export default function DeviceTable({ devices, onDelete, onEdit }: DeviceTableProps) {
   return (
     <div className='rounded-lg border overflow-hidden'>
       <Table>
@@ -33,7 +34,7 @@ export default function DeviceTable({ devices, onDelete }: DeviceTableProps) {
               </TableCell>
               <TableCell className='text-right'>
                 <div className='flex justify-end gap-2'>
-                  <Button size='sm' variant='ghost'>
+                  <Button size='sm' variant='ghost' onClick={() => onEdit?.(device)}>
                     <Edit className='w-4 h-4' />
                   </Button>
                   <Button size='sm' variant='ghost' onClick={() => onDelete?.(device.id)}>
