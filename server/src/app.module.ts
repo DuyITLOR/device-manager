@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/user.module';
 import { DevicesModule } from './modules/devices/devices.module';
 import { MqttModule } from './modules/MQTT/mqtt.module';
+import { QrModule } from './modules/qr/qr.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/role.guard';
@@ -26,6 +27,7 @@ import { HealthModule } from './modules/health/health.module';
     AuthModule,
     UsersModule,
     DevicesModule,
+    QrModule,
     HealthModule,
     MqttModule,
   ],
