@@ -4,8 +4,6 @@
 #include "esp_camera.h"
 #include <esp_now.h>
 #include <WiFi.h>
-
-
 #include "ESP32QRCodeReader.h"
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
