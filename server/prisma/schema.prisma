@@ -67,7 +67,7 @@ enum ActivityAction {
 
 model User {
   id        String   @id @default(uuid())
-  code      String?
+  code      String?  @unique
   name      String
   email     String   @unique
   password  String

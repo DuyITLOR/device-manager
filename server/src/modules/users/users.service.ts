@@ -193,4 +193,11 @@ export class UsersService {
       data: this.sanitize(updated),
     };
   }
+
+  async getNameByCode(code: string) {
+    const user = await this.prisma.user.findFirst({ where: { code } });
+
+    if (!user) throwUserError('USER_NOT_FOUND');
+    return user.name;
+  }
 }
