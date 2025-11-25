@@ -6,12 +6,27 @@
 #include <WiFi.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <PubSubClient.h>
 
 // Pin definitions
 /*
   LCD pins SDA: 21 - SCL: 22
   RFID pins SDA: 5 - SCK: 18 - MOSI: 23 - MISO: 19 - RST: 17
 */
+// WiFi credentials
+const char *ssid = "THREE O'CLOCK";
+const char *password = "3open24h";
+
+// MQTT broker settings
+const char *mqtt_server = "7b1f4b73bed84278adf976988bc34ed9.s1.eu.hivemq.cloud";
+const int mqtt_port = 8883;
+const char *mqtt_user = "Robotics";
+const char *mqtt_pass = "Robotics123";
+
+// Create secure client
+WiFiClientSecure espClient;
+PubSubClient client(espClient);
 
 // RFID pins
 const int RIFD_SDA = 5;  // SDA
@@ -25,7 +40,8 @@ const int RE_pinSW = 26; // SW
 // Global variables
 // String deviceList[10] = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
 std::vector<String> deviceList;
-String uid;
+String uid = "";
+String userName = "";
 volatile long encoderCount = 0;
 volatile uint8_t prevAB = 0;
 bool lastPressed = false;
@@ -87,6 +103,47 @@ void displayWelcome()
   lcd.print("N.Duy-M.Dang-A.Khoa");
 }
 
+void mqttCallback(char *topic, byte *payload, unsigned int length)
+{
+  String msg = "";
+
+  for (int i = 0; i < length; i++)
+  {
+    msg += (char)payload[i];
+  }
+  userName = msg;
+  Serial.print("[MQTT] Message from server: ");
+  Serial.println(userName);
+
+  // lcd.clear();
+  // lcd.setCursor(0, 0);
+  // lcd.print("User:");
+  // lcd.setCursor(0, 1);
+  // lcd.print(msg);
+}
+
+void reconnectMQTT()
+{
+  while (!client.connected())
+  {
+    Serial.print("[MQTT] Connecting...");
+
+    if (client.connect("ESP32Client", mqtt_user, mqtt_pass))
+    {
+      Serial.println(" Connected!");
+
+      client.subscribe("rfid/server/name");
+      Serial.println("[MQTT] Subscribed to rfid/server/name");
+    }
+    else
+    {
+      Serial.print(" Failed, rc=");
+      Serial.println(client.state());
+      delay(2000);
+    }
+  }
+}
+
 void displayDelete(String item)
 {
   lcd.setCursor(0, 1);
@@ -122,13 +179,13 @@ String readRFID()
     return "";
   if (!mfrc522.PICC_ReadCardSerial())
     return "";
-  String uid = "";
+
+  String id = "";
   for (byte i = 0; i < mfrc522.uid.size; i++)
-  {
-    uid += String(mfrc522.uid.uidByte[i], HEX);
-  }
-  uid.toUpperCase();
-  return uid;
+    id += String(mfrc522.uid.uidByte[i], HEX);
+
+  id.toUpperCase();
+  return id;
 }
 
 void removeDevices(int index)
@@ -228,13 +285,44 @@ void setup()
 
   esp_now_register_recv_cb(onReceive);
   Serial.println("[INFO] Ready to receive via ESP-NOW!");
+
+  // MQTT setup
+  espClient.setInsecure(); // Bỏ xác thực chứng chỉ SSL
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(mqttCallback);
+
+  // Kết nối WiFi
+  WiFi.begin(ssid, password);
+  Serial.print("[WIFI] Connecting");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\n[WIFI] Connected!");
+  Serial.print("[WIFI] IP: ");
+  Serial.println(WiFi.localIP());
 }
 
 void loop()
 {
+  client.loop();
+  if (!client.connected())
+  {
+    reconnectMQTT();
+  }
+
   uid = readRFID();
   if (uid != "")
   {
+    Serial.println("[RFID] UID read: " + uid);
+    Serial.println("[MQTT] Publishing UID: " + uid);
+    client.publish("rfid/esp32/code", uid.c_str());
+  } else userName = "";
+  if (userName != "")
+  {
+   
+    // Serial.println("[MQTT] Sent code: " + uid);
     if (screenClear == 0)
     {
       lcd.clear();
@@ -252,7 +340,7 @@ void loop()
       screenDeleteClear = 0;
       startSession = millis();
       lcd.setCursor(0, 0);
-      lcd.print("UID: " + uid + "   ");
+      lcd.print("Name: " + userName + "   ");
 
       if (deviceList.size() == 0)
       {
@@ -260,8 +348,8 @@ void loop()
         lcd.print("No devices found.   ");
         checkpoint_1 = 0;
         return;
-      } 
-      else if(deviceList.size() > 0 && checkpoint_1 == 0)
+      }
+      else if (deviceList.size() > 0 && checkpoint_1 == 0)
       {
         lcd.clear();
         checkpoint_1 = 1;
