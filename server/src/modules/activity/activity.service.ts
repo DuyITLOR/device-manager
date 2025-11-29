@@ -7,6 +7,7 @@ import {
 } from '@prisma/client';
 import { CreateActivityLogDto } from './dto/create-activity-log.dto';
 import { QueryActivityLogDto } from './dto/query-activity-log.dto';
+import { ACTIVITY_LOG_MESSAGES } from '../../shared/constants';
 
 @Injectable()
 export class ActivityService {
@@ -108,14 +109,16 @@ export class ActivityService {
 
     return {
       success: true,
-      message: 'Activity logs retrieved successfully',
-      data: {
-        items: activityLogs,
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
+      meta: {
         total,
-        limit,
         page,
+        limit,
         totalPages,
         hasMore: page < totalPages,
+      },
+      data: {
+        items: activityLogs,
       },
     };
   }
@@ -141,14 +144,14 @@ export class ActivityService {
     if (!activityLog) {
       return {
         success: false,
-        message: 'Activity log not found',
+        message: 'Không tìm thấy hoạt động',
         data: null,
       };
     }
 
     return {
       success: true,
-      message: 'Activity log retrieved successfully',
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
       data: activityLog,
     };
   }
@@ -184,7 +187,7 @@ export class ActivityService {
 
     return {
       success: true,
-      message: 'Activity logs retrieved successfully',
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
       data: activityLogs,
     };
   }
@@ -215,7 +218,7 @@ export class ActivityService {
 
     return {
       success: true,
-      message: 'Activity logs retrieved successfully',
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
       data: activityLogs,
     };
   }

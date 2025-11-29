@@ -65,3 +65,10 @@ export const DEVICE_MESSAGES = {
     message: 'Lấy danh sách thiết bị thành công',
   },
 } as const;
+
+export const ACTIVITY_LOG_MESSAGES = {
+  ACTIVITY_LOG_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Lấy danh sách nhật ký hoạt động thành công',
+  },
+} as const;
