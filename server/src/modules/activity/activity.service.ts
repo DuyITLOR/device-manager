@@ -1,43 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import {
-  PrismaClient,
-  // ActivityAction,
-  ActivityTargetType,
-  Prisma,
-} from '@prisma/client';
-import { CreateActivityLogDto } from './dto/create-activity-log.dto';
+import { Injectable, Logger } from '@nestjs/common';
+import { PrismaClient, ActivityTargetType, Prisma } from '@prisma/client';
 import { QueryActivityLogDto } from './dto/query-activity-log.dto';
+import { ACTIVITY_LOG_MESSAGES } from '../../shared/constants';
+import { CreateLogInput } from './interfaces/logger.interface';
 
 @Injectable()
 export class ActivityService {
+  private readonly logger = new Logger(ActivityService.name);
   private prisma = new PrismaClient();
 
-  async create(dto: CreateActivityLogDto) {
-    const activityLog = await this.prisma.activityLog.create({
+  async create(data: CreateLogInput) {
+    await this.prisma.activityLog.create({
       data: {
-        actorId: dto.actorId,
-        action: dto.action,
-        targetType: dto.targetType,
-        targetId: dto.targetId,
-        details: dto.details || {},
-      },
-      include: {
-        actor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
+        actorId: data.actorId,
+        action: data.action,
+        targetType: data.targetType,
+        targetId: data.targetId,
+        details: data.details as any,
+        timestamp: new Date(),
       },
     });
-
-    return {
-      success: true,
-      message: 'Activity log created successfully',
-      data: activityLog,
-    };
   }
 
   async findAll(query: QueryActivityLogDto) {
@@ -108,14 +90,16 @@ export class ActivityService {
 
     return {
       success: true,
-      message: 'Activity logs retrieved successfully',
-      data: {
-        items: activityLogs,
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
+      meta: {
         total,
-        limit,
         page,
+        limit,
         totalPages,
         hasMore: page < totalPages,
+      },
+      data: {
+        items: activityLogs,
       },
     };
   }
@@ -141,14 +125,14 @@ export class ActivityService {
     if (!activityLog) {
       return {
         success: false,
-        message: 'Activity log not found',
+        message: 'Không tìm thấy hoạt động',
         data: null,
       };
     }
 
     return {
       success: true,
-      message: 'Activity log retrieved successfully',
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
       data: activityLog,
     };
   }
@@ -184,7 +168,7 @@ export class ActivityService {
 
     return {
       success: true,
-      message: 'Activity logs retrieved successfully',
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
       data: activityLogs,
     };
   }
@@ -215,7 +199,7 @@ export class ActivityService {
 
     return {
       success: true,
-      message: 'Activity logs retrieved successfully',
+      message: ACTIVITY_LOG_MESSAGES.ACTIVITY_LOG_FETCH_SUCCESS.message,
       data: activityLogs,
     };
   }

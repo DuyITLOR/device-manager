@@ -5,6 +5,7 @@ import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import configuration from './config/configuration';
 import { envValidationSchema } from './config/validation';
 
+import { ActivityModule } from './modules/activity/activity.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/user.module';
 import { DevicesModule } from './modules/devices/devices.module';
@@ -24,6 +25,7 @@ import { HealthModule } from './modules/health/health.module';
       load: [configuration],
       validationSchema: envValidationSchema,
     }),
+    ActivityModule,
     AuthModule,
     UsersModule,
     DevicesModule,
