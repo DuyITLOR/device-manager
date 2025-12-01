@@ -47,10 +47,10 @@ export class QrExportService {
           const qrPosY = currentY + gap / 2;
           doc.image(qrBuffer, qrPosX, qrPosY, { width: qrSize });
 
-          // doc.fontSize(10).text(id, currentX, qrPosY + qrSize + 5, {
-          //   width: cellWidth,
-          //   align: 'center',
-          // });
+          doc.fontSize(6).text(id, currentX, qrPosY + qrSize + 5, {
+            width: cellWidth,
+            align: 'center',
+          });
 
           count++;
           if (count % cols === 0) {
