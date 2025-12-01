@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus, QrCode, Loader2, User } from 'lucide-react';
+import { Search, Plus, QrCode, Loader2, User, Delete } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +31,7 @@ const AdminDashboard = () => {
   const searchParams = useSearchParams();
 
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
+  // const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
@@ -40,6 +40,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [curPage, setCurPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [isExporting, setIsExporting] = useState(true); 
+  const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
 
   const { register, handleSubmit, setValue, watch } = useForm<FilterFormData>({
     defaultValues: {
@@ -60,8 +63,19 @@ const AdminDashboard = () => {
   };
 
   const handleExportQR = () => {
-    console.log('Exporting QR codes for devices:', selectedDevices);
+    setIsExporting(false);
   };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedDevices((prev) => 
+      prev.includes(id) ? prev.filter((i) => i !== id): [...prev, id]
+    )
+  }
+
+  const handleExitExportQR = () => {
+    setIsExporting(true);
+    setSelectedDevices([]);
+  }
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -92,7 +106,7 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const params: DeviceParams = {
-        limit: 10,
+        limit: 5,
         page: curPage,
         name: searchParams.get('name') || '',
       };
@@ -134,12 +148,22 @@ const AdminDashboard = () => {
                 <CardDescription className='mt-1'>Thêm, chỉnh sửa và quản lý tất cả thiết bị</CardDescription>
               </div>
               <div className='flex gap-2'>
-                {selectedDevices.length > 0 && (
-                  <Button variant='outline' onClick={handleExportQR} className='glass-button'>
-                    <QrCode className='w-4 h-4 mr-2' />
-                    Xuất QR ({selectedDevices.length})
-                  </Button>
-                )}
+
+                {
+                  isExporting ? null : (
+                    <Button variant='outline' onClick={handleExitExportQR} className='glass-button bg-red-400'>
+                      <Delete  />
+                    </Button>
+                  )
+                }
+
+                <Button variant='outline' onClick={handleExportQR} className='glass-button'>
+                  <QrCode  />
+                  {
+                    isExporting ? (<p>Chọn thiết bị xuất QR</p>) : (<p>Xuất QR ({selectedDevices.length})</p>)
+                  }
+                </Button>
+
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <Plus className='w-4 h-4 mr-2' />
                   Thêm thiết bị
@@ -168,6 +192,9 @@ const AdminDashboard = () => {
                   setEditingDevice(device);
                   setEditDialogOpen(true);
                 }}
+                selectTable={!isExporting}
+                selectIds={selectedDevices}
+                onToggleSelect={handleToggleSelect}
               />
               <PaginationComponent currentPage={curPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </CardContent>

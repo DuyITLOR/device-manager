@@ -6,18 +6,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Edit, Trash2 } from 'lucide-react';
 import type { Device } from '@/lib/types/device';
 import { DEVICE_STATUS_MAP, DEVICE_STATUS_VARIANTS } from '@/lib/mapper/deviceStatus';
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DeviceTableProps {
   devices: Device[];
   onDelete?: (deviceId: string) => void;
   onEdit?: (device: Device) => void;
+
+  selectTable?: boolean;
+  selectIds?: string[];
+  onToggleSelect?: (id: string) => void;
+
 }
-export default function DeviceTable({ devices, onDelete, onEdit }: DeviceTableProps) {
+export default function DeviceTable({ devices, onDelete, onEdit, selectTable, selectIds, onToggleSelect }: DeviceTableProps) {
   return (
     <div className='rounded-lg border overflow-hidden'>
       <Table>
         <TableHeader>
           <TableRow>
+            {selectTable && <TableHead className='w-[40px]'>Chọn</TableHead>}
             <TableHead>Tên thiết bị</TableHead>
             <TableHead className='hidden md:table-cell'>Mô tả</TableHead>
             <TableHead>Trạng thái</TableHead>
@@ -27,6 +34,14 @@ export default function DeviceTable({ devices, onDelete, onEdit }: DeviceTablePr
         <TableBody>
           {devices.map((device) => (
             <TableRow key={device.id}>
+              {selectTable && (
+                <TableCell className="w-[40px]">
+                  <Checkbox
+                    checked={selectIds?.includes(device.id) || false}
+                    onCheckedChange={() => onToggleSelect?.(device.id)}
+                  />
+                </TableCell>
+              )}
               <TableCell className='font-medium'>{device.name}</TableCell>
               <TableCell className='hidden md:table-cell text-muted-foreground'>{device.description}</TableCell>
               <TableCell>
