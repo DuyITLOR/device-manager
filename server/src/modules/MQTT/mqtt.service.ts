@@ -10,40 +10,44 @@ export class MqttService implements OnModuleInit {
   constructor(private readonly userService: UsersService) {}
 
   onModuleInit() {
-    this.client = connect(
-      'mqtts://7b1f4b73bed84278adf976988bc34ed9.s1.eu.hivemq.cloud:8883',
-      {
-        username: 'Robotics',
-        password: 'Robotics123',
-        rejectUnauthorized: false,
-      },
-    );
+    this.client = connect(process.env.MQTT_HOST!, {
+      username: process.env.MQTT_USERNAME,
+      password: process.env.MQTT_PASSWORD,
+      rejectUnauthorized: false,
+    });
 
     this.client.on('connect', () => {
       console.log('[MQTT] connected to hive MQ');
 
-      this.client.subscribe('rfid/esp32/code', (err: Error | null) => {
-        if (err) console.error('Subscribe error:', err);
-        else console.log('[MQTT] Subscribed to rfid/esp32/code');
-      });
+      this.client.subscribe(
+        process.env.MQTT_RFID_TOPIC!,
+        (err: Error | null) => {
+          if (err) console.error('Subscribe error:', err);
+          else console.log('[MQTT] Subscribed to rfid/esp32/code');
+        },
+      );
     });
 
-    this.client.on('message', async (topic: string, payload: Buffer) => {
-      if (topic == 'rfid/esp32/code') {
-        const code = payload.toString();
-        console.log('[MQTT] Recieve code: ', code);
+    this.client.on('message', (topic: string, payload: Buffer) => {
+      (async () => {
+        if (topic == process.env.MQTT_RFID_TOPIC!) {
+          const code = payload.toString();
+          console.log('[MQTT] Recieve code: ', code);
 
-        try {
-          const name = await this.userService.getNameByCode(code);
-          const newName = removeAccent(name);
+          try {
+            const name = await this.userService.getNameByCode(code);
+            const newName = removeAccent(name);
 
-          this.client.publish('rfid/server/name', newName);
-          console.log('[MQTT] Sent name: ', newName);
-        } catch (err) {
-          this.client.publish('rfid/server/name', 'NOT_FOUND');
-          console.error('[MQTT] User not found', err);
+            this.client.publish(process.env.MQTT_NAME_TOPIC!, newName);
+            console.log('[MQTT] Sent name: ', newName);
+          } catch (err) {
+            this.client.publish(process.env.MQTT_NAME_TOPIC!, 'NOT_FOUND');
+            console.error('[MQTT] User not found', err);
+          }
         }
-      }
+      })().catch((err) => {
+        console.error('[MQTT] Error in message handler', err);
+      });
     });
   }
 }
