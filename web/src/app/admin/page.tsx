@@ -108,9 +108,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleToggleSelect = (id: string) => {
+  const handleToggleSelect = (deviceId: string) => {
     setSelectedDevices((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(deviceId) ? prev.filter((i) => i !== deviceId) : [...prev, deviceId]
     );
   };
 
@@ -195,7 +195,7 @@ const AdminDashboard = () => {
                   Thêm, chỉnh sửa và quản lý tất cả thiết bị
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col md:flex-row gap-2">
                 {isExporting ? (
                   <Button
                     variant="outline"
@@ -206,11 +206,11 @@ const AdminDashboard = () => {
                     <p>Chọn thiết bị xuất QR</p>
                   </Button>
                 ) : (
-                  <>
+                  <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       onClick={handleExitExportQR}
-                      className="glass-button bg-red-400"
+                      
                     >
                       <Delete />
                     </Button>
@@ -223,7 +223,7 @@ const AdminDashboard = () => {
                       <QrCode />
                       <p>Xuất QR ({selectedDevices.length})</p>
                     </Button>
-                  </>
+                  </div>
                 )}
 
 

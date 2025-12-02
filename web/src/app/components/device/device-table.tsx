@@ -15,7 +15,7 @@ interface DeviceTableProps {
 
   selectTable?: boolean;
   selectIds?: string[];
-  onToggleSelect?: (id: string) => void;
+  onToggleSelect?: (deviceId: string) => void;
 
 }
 export default function DeviceTable({ devices, onDelete, onEdit, selectTable, selectIds, onToggleSelect }: DeviceTableProps) {
@@ -24,7 +24,7 @@ export default function DeviceTable({ devices, onDelete, onEdit, selectTable, se
       <Table>
         <TableHeader>
           <TableRow>
-            {selectTable && <TableHead className='w-[40px]'>Chọn</TableHead>}
+            {selectTable && <TableHead>Chọn</TableHead>}
             <TableHead>Tên thiết bị</TableHead>
             <TableHead className='hidden md:table-cell'>Mô tả</TableHead>
             <TableHead>Trạng thái</TableHead>
@@ -35,7 +35,7 @@ export default function DeviceTable({ devices, onDelete, onEdit, selectTable, se
           {devices.map((device) => (
             <TableRow key={device.id}>
               {selectTable && (
-                <TableCell className="w-[40px]">
+                <TableCell>
                   <Checkbox
                     checked={selectIds?.includes(device.id) || false}
                     onCheckedChange={() => onToggleSelect?.(device.id)}
