@@ -8,4 +8,17 @@ export default () => ({
     expiresIn: process.env.JWT_EXPIRES_IN,
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
   },
+  mqtt: {
+    host: process.env.MQTT_HOST,
+    username: process.env.MQTT_USERNAME,
+    password: process.env.MQTT_PASSWORD,
+
+    topic: {
+      rfidcode: process.env.MQTT_RFID_TOPIC,
+      nameRespone: process.env.MQTT_NAME_TOPIC,
+
+      requestStatus: process.env.MQTT_CHECK_REQUEST_AVAIABLE,
+      responseStatus: process.env.MQTT_CHECK_RESPONSE_AVAIABLE,
+    },
+  },
 });
