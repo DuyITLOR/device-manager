@@ -11,7 +11,7 @@ export class QueryDeviceDto {
     typeof value === 'string' ? decodeURIComponent(value) : undefined,
   )
   @IsString()
-  search?: string;
+  name?: string;
 
   @IsOptional()
   @IsString()

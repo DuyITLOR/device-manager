@@ -128,11 +128,11 @@ export class DevicesService {
   }
 
   async findAll(query: QueryDeviceDto) {
-    const { status, search, startDate, endDate, limit = 20, page = 1 } = query;
+    const { status, name, startDate, endDate, limit = 20, page = 1 } = query;
     const where: Prisma.DeviceWhereInput = {};
     if (status) where.status = status;
-    if (search) {
-      where.name = { contains: search, mode: 'insensitive' as const };
+    if (name) {
+      where.name = { contains: name, mode: 'insensitive' as const };
     }
     if (startDate || endDate) {
       where.createdAt = {};
