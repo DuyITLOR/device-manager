@@ -26,6 +26,20 @@ export class DevicesService {
     return { id, name, description, status, createdAt };
   }
 
+  async findById(id: string, options: { includeDeleted?: boolean } = {}) {
+    const { includeDeleted = false } = options;
+
+    const device = await this.prisma.device.findUnique({ where: { id } });
+
+    if (!device) throwDeviceError('DEVICE_NOT_FOUND');
+
+    if (!includeDeleted && device.isDeleted) {
+      throwDeviceError('DEVICE_IS_DELETED');
+    }
+
+    return device;
+  }
+
   async create(dto: CreateDevicesDto, actorId: string) {
     const device = await this.prisma.device.create({
       data: {
@@ -57,15 +71,7 @@ export class DevicesService {
   }
 
   async findOne(id: string) {
-    const device = await this.prisma.device.findUnique({
-      where: {
-        id,
-      },
-    });
-
-    if (!device) {
-      throwDeviceError('DEVICE_NOT_FOUND');
-    }
+    const device = await this.findById(id);
 
     return {
       status: DEVICE_MESSAGES.DEVICE_QUERY_SUCCESS.status,
@@ -76,8 +82,7 @@ export class DevicesService {
   }
 
   async updateStatus(id: string, dto: updateStatus, actorId: string) {
-    const existing = await this.prisma.device.findUnique({ where: { id } });
-    if (!existing) throwDeviceError('DEVICE_NOT_FOUND');
+    await this.findById(id);
 
     const updated = await this.prisma.device.update({
       where: { id },
@@ -106,10 +111,12 @@ export class DevicesService {
   }
 
   async delete(id: string, actorId: string) {
-    const existing = await this.prisma.device.findUnique({ where: { id } });
-    if (!existing) throwDeviceError('DEVICE_NOT_FOUND');
+    await this.findById(id);
 
-    await this.prisma.device.delete({ where: { id } });
+    await this.prisma.device.update({
+      where: { id },
+      data: { isDeleted: true },
+    });
 
     await this.prisma.activityLog.create({
       data: {
@@ -128,11 +135,22 @@ export class DevicesService {
   }
 
   async findAll(query: QueryDeviceDto) {
-    const { status, name, startDate, endDate, limit = 20, page = 1 } = query;
+    const {
+      status,
+      name,
+      startDate,
+      endDate,
+      limit = 20,
+      page = 1,
+      deleted = false,
+    } = query;
     const where: Prisma.DeviceWhereInput = {};
     if (status) where.status = status;
     if (name) {
       where.name = { contains: name, mode: 'insensitive' as const };
+    }
+    if (!deleted) {
+      where.isDeleted = false;
     }
     if (startDate || endDate) {
       where.createdAt = {};
@@ -166,8 +184,7 @@ export class DevicesService {
   }
 
   async updateInfor(id: string, dto: UpdateDevices, actorId: string) {
-    const existed = await this.prisma.device.findUnique({ where: { id } });
-    if (!existed) throwDeviceError('DEVICE_NOT_FOUND');
+    await this.findById(id);
 
     const updated = await this.prisma.device.update({
       where: { id },
