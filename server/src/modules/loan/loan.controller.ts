@@ -12,4 +12,9 @@ export class LoanController {
 	async getLoans(@Query() query: QueryLoanDto) {
 		return this.loanService.getLoans(query);
 	}
+
+	@Get('device/:deviceId/borrower')
+	async getUserBorrowingDevice(@Param('deviceId') deviceId: string ) {
+		return this.loanService.getUserBorrowingDevice(deviceId);
+	}
 }
