@@ -74,3 +74,18 @@ export const ACTIVITY_LOG_MESSAGES = {
     message: 'Lấy danh sách nhật ký hoạt động thành công',
   },
 } as const;
+
+export const LOAN_MESSAGES = {
+  LOAN_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Lấy danh sách thiết bị đang (hoặc đã) mượn thành công',
+  },
+  USER_BORROWING_DEVICE_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Tìm người dùng đang mượn thiết bị thành công',
+  },
+  NO_ACTIVE_LOAN: {
+    status: 404,
+    message: 'Không có ai đang mượn thiết bị này',
+  },
+};

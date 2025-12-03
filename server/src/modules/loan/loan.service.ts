@@ -9,15 +9,18 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { QueryLoanDto } from './dto/queryLoan.dto';
-import { brotliCompress, brotliDecompress } from 'zlib';
-import { emitWarning, loadEnvFile } from 'process';
-import { contains } from 'class-validator';
-import { setDefaultCACertificates } from 'tls';
+import { LOAN_MESSAGES } from '../../shared/constants';
+import { LoanModule } from './loan.module';
 
 type LoanWithRelations = Loan & {
   borrower?: { id: string; name: string; email: string; role: string };
   device?: { id: string; name: string; description: string; status: string };
 };
+
+function throwLoanError(code: keyof typeof LOAN_MESSAGES): never {
+  const err = LOAN_MESSAGES[code];
+  throw new HttpException({ code, message: err.message }, err.status);
+}
 
 @Injectable()
 export class LoanService {
@@ -99,8 +102,9 @@ export class LoanService {
     ]);
 
     return {
+      status: LOAN_MESSAGES.LOAN_FETCH_SUCCESS.status,
       success: true,
-      message: 'Loans retrieved successfully',
+      message: LOAN_MESSAGES.LOAN_FETCH_SUCCESS.message,
       meta: {
         total,
         page,
@@ -112,18 +116,28 @@ export class LoanService {
     };
   }
 
-  // async getUserOfLoan(deviceId: string) {
-  //   const where: Prisma.LoanWhereInput = {};
-  //   where.deviceId = deviceId;
-  //   where.status = 'BORROWED';
+  async getUserBorrowingDevice(deviceId: string) {
+    const where: Prisma.LoanWhereInput = {};
+    where.deviceId = deviceId;
+    where.status = 'BORROWED';
 
+    const loan = await this.prisma.loan.findFirst({
+      where,
+      include: {
+        borrower: true,
+        device: true,
+      }
+    })
 
-  //   const loan = await this.prisma.loan.findFirst({
-  //     where,
-  //     include: {
-  //       borrower: true,
-  //     }
-  //   })
+    if(!loan) {
+      throwLoanError('NO_ACTIVE_LOAN')
+    }
 
-  // }
+    return {
+      status: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.status,
+      success: true,
+      message: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.message,
+      data: this.sanitize(loan),
+    }
+  }
 }
