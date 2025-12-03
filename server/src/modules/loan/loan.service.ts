@@ -21,7 +21,8 @@ type LoanWithRelations = Loan & {
 
 @Injectable()
 export class LoanService {
-  constructor(private prisma: PrismaService) {}
+  // constructor(private prisma: PrismaService) {}
+  private prisma = new PrismaClient();
 
   private sanitize(loan: LoanWithRelations) {
     const {
@@ -83,9 +84,16 @@ export class LoanService {
     const [data, total] = await this.prisma.$transaction([
       this.prisma.loan.findMany({
         where,
-        orderBy: { borrowedAt: 'desc' },
+        orderBy: [
+          { status: 'asc' },
+          { borrowedAt: 'desc' }
+        ],
         skip: (page - 1) * limit,
         take: limit,
+        include: {
+          borrower: true,
+          device: true,
+        }
       }),
       this.prisma.loan.count({ where }),
     ]);
@@ -103,4 +111,19 @@ export class LoanService {
       data: data.map((loan) => this.sanitize(loan)),
     };
   }
+
+  // async getUserOfLoan(deviceId: string) {
+  //   const where: Prisma.LoanWhereInput = {};
+  //   where.deviceId = deviceId;
+  //   where.status = 'BORROWED';
+
+
+  //   const loan = await this.prisma.loan.findFirst({
+  //     where,
+  //     include: {
+  //       borrower: true,
+  //     }
+  //   })
+
+  // }
 }

@@ -9,6 +9,7 @@ import { ActivityModule } from './modules/activity/activity.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/user.module';
 import { DevicesModule } from './modules/devices/devices.module';
+import { LoanModule } from './modules/loan/loan.module';
 import { MqttModule } from './modules/MQTT/mqtt.module';
 import { QrModule } from './modules/qr/qr.module';
 
@@ -29,6 +30,7 @@ import { HealthModule } from './modules/health/health.module';
     AuthModule,
     UsersModule,
     DevicesModule,
+    LoanModule,
     QrModule,
     HealthModule,
     MqttModule,
