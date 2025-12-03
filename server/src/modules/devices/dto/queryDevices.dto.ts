@@ -1,4 +1,12 @@
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { DeviceStatus } from '@prisma/client';
 export class QueryDeviceDto {
@@ -33,4 +41,9 @@ export class QueryDeviceDto {
   @IsInt()
   @Min(1)
   page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  deleted?: boolean = false;
 }

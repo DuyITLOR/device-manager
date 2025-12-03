@@ -14,15 +14,11 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-
-
 enum UserRole {
   USER
   MANAGER
   ADMIN
 }
-
-
 
 enum DeviceStatus {
   AVAILABLE
@@ -63,65 +59,68 @@ enum ActivityAction {
   USER_DELETE
 }
 
-
-
 model User {
-  id        String   @id @default(uuid())
-  code      String?  @unique
+  id        String    @id @default(uuid())
+  code      String?   @unique
   name      String
-  email     String   @unique
+  email     String    @unique
   password  String
   role      UserRole
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  isDeleted Boolean   @default(false)
 
-  loansBorrowed   Loan[]        @relation("LoansByBorrower")
-  transfersFrom   Transfer[]    @relation("TransfersFromUser")
-  transfersTo     Transfer[]    @relation("TransfersToUser")
-  activityLogs    ActivityLog[] @relation("ActivityActor")
+  loansBorrowed Loan[]        @relation("LoansByBorrower")
+  transfersFrom Transfer[]    @relation("TransfersFromUser")
+  transfersTo   Transfer[]    @relation("TransfersToUser")
+  activityLogs  ActivityLog[] @relation("ActivityActor")
 
+  @@index([isDeleted])
+  @@index([email, isDeleted])
 }
 
 model Device {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   name        String
   description String
   status      DeviceStatus
-  createdAt   DateTime @default(now())
+  createdAt   DateTime     @default(now())
+  deletedAt   DateTime?
+  isDeleted   Boolean      @default(false)
 
   loans Loan[]
 
   @@index([status])
+  @@index([isDeleted])
+  @@index([status, isDeleted])
 }
 
 model Loan {
-  id         String   @id @default(uuid())
+  id         String     @id @default(uuid())
   deviceId   String
   borrowerId String
   status     LoanStatus
-  borrowedAt DateTime @default(now())
+  borrowedAt DateTime   @default(now())
   returnedAt DateTime?
   note       String
 
+  device   Device @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+  borrower User   @relation("LoansByBorrower", fields: [borrowerId], references: [id], onDelete: Restrict)
 
-  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Restrict)
-  borrower   User     @relation("LoansByBorrower", fields: [borrowerId], references: [id], onDelete: Restrict)
-
-  transfers  Transfer[]
+  transfers Transfer[]
 
   @@index([deviceId])
   @@index([borrowerId])
   @@index([status])
 }
 
-
 model Transfer {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   loanId      String
   fromUserId  String
   toUserId    String
   status      TransferStatus
-  requestedAt DateTime @default(now())
-
+  requestedAt DateTime       @default(now())
 
   loan     Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
   fromUser User @relation("TransfersFromUser", fields: [fromUserId], references: [id], onDelete: Restrict)
@@ -134,15 +133,15 @@ model Transfer {
 }
 
 model ActivityLog {
-  id         String   @id @default(uuid())
+  id         String             @id @default(uuid())
   actorId    String?
   action     ActivityAction
   targetType ActivityTargetType
   targetId   String
-  timestamp  DateTime @default(now())    
+  timestamp  DateTime           @default(now())
   details    Json?
 
-  actor      User? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actor User? @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([actorId])
   @@index([targetType, targetId])

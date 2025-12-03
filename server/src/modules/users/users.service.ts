@@ -23,11 +23,12 @@ export class UsersService {
 
   // Get all users
   async findAll(query: QueryUser) {
-    const { code, name, role, limit = 20, page = 1 } = query;
+    const { code, name, role, limit = 20, page = 1, deleted = false } = query;
     const where: Prisma.UserWhereInput = {};
     if (role) where.role = role;
     if (name) where.name = { contains: name, mode: 'insensitive' as const };
     if (code) where.code = { contains: code, mode: 'insensitive' as const };
+    if (!deleted) where.isDeleted = false;
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.user.findMany({
@@ -61,22 +62,38 @@ export class UsersService {
     };
   }
 
-  // Get one user by id
-  async findOne(id: string) {
+  async findById(id: string, options: { includeDeleted?: boolean } = {}) {
+    const { includeDeleted = false } = options;
+
     const user = await this.prisma.user.findUnique({ where: { id } });
+
     if (!user) throwUserError('USER_NOT_FOUND');
 
-    return this.sanitize(user);
+    if (!includeDeleted && user.isDeleted) {
+      throwUserError('USER_IS_DELETED');
+    }
+
+    return user;
+  }
+
+  // Get one user by id
+  async findOne(id: string) {
+    const user = await this.findById(id);
+    return {
+      status: USER_MESSAGES.USER_FETCH_SUCCESS.status,
+      success: true,
+      message: USER_MESSAGES.USER_FETCH_SUCCESS.message,
+      data: this.sanitize(user),
+    };
   }
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return user;
   }
 
   async create(dto: createUserDto) {
-    const existed = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+    const existed = await this.findByEmail(dto.email);
     if (existed) throwUserError('USER_DUPLICATE_EMAIL');
 
     const hashed = await hashPassword(dto.password);
@@ -99,8 +116,7 @@ export class UsersService {
   }
 
   async updateProfile(id: string, dto: updateUserDto) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throwUserError('USER_NOT_FOUND');
+    const user = await this.findById(id);
 
     const updated = await this.prisma.user.update({
       where: { id },
@@ -127,8 +143,7 @@ export class UsersService {
     if (meta.role === ROLES.USER && meta.id === id)
       throwUserError('USER_FORBIDDEN_CHANGE_PASSWORD_OTHERS');
 
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throwUserError('USER_NOT_FOUND');
+    const user = await this.findById(id);
 
     const valid = await comparePassword(dto.currentPassword, user.password);
     if (!valid) throwUserError('USER_WRONG_PASSWORD');
@@ -147,8 +162,7 @@ export class UsersService {
   }
 
   async updateRole(id: string, dto: updateRoleDto) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throwUserError('USER_NOT_FOUND');
+    await this.findById(id);
 
     const updated = await this.prisma.user.update({
       where: { id },
@@ -166,10 +180,15 @@ export class UsersService {
   }
 
   async delete(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throwUserError('USER_NOT_FOUND');
+    await this.findById(id);
 
-    await this.prisma.user.delete({ where: { id } });
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        isDeleted: true,
+        deletedAt: new Date(),
+      },
+    });
 
     return {
       status: USER_MESSAGES.USER_DELETE_SUCCESS.status,
@@ -179,6 +198,7 @@ export class UsersService {
   }
 
   async resetPassword(id: string) {
+    await this.findById(id);
     const updated = await this.prisma.user.update({
       where: { id },
       data: {
@@ -198,6 +218,7 @@ export class UsersService {
     const user = await this.prisma.user.findFirst({ where: { code } });
 
     if (!user) throwUserError('USER_NOT_FOUND');
+    if (user.isDeleted) throwUserError('USER_IS_DELETED');
     return user.name;
   }
 }

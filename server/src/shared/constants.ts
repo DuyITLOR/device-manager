@@ -41,6 +41,7 @@ export const USER_MESSAGES = {
     status: 200,
     message: 'Lấy danh sách người dùng thành công',
   },
+  USER_IS_DELETED: { status: 410, message: 'Người dùng đã bị xóa' },
 } as const;
 
 export const ROLES = {
@@ -64,6 +65,7 @@ export const DEVICE_MESSAGES = {
     status: 200,
     message: 'Lấy danh sách thiết bị thành công',
   },
+  DEVICE_IS_DELETED: { status: 410, message: 'Thiết bị đã bị xóa' },
 } as const;
 
 export const ACTIVITY_LOG_MESSAGES = {
