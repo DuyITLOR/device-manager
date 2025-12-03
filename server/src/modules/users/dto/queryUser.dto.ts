@@ -1,4 +1,12 @@
-import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { UserRole } from '@prisma/client';
 
@@ -30,4 +38,9 @@ export class QueryUser {
   @IsInt()
   @Min(1)
   page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  deleted?: boolean;
 }
