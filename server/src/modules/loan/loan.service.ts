@@ -161,6 +161,9 @@ export class LoanService {
     if (device.isDeleted) {
       throwAppError('DEVICE_IS_DELETED', DEVICE_MESSAGES.DEVICE_IS_DELETED);
     }
+    if (device.status === 'BORROWED') {
+      throwAppError('DEVICE_ALREADY_ASSIGNED', DEVICE_MESSAGES.DEVICE_ALREADY_ASSIGNED);
+    }
     if (!borrower) {
       throwAppError('USER_NOT_FOUND', USER_MESSAGES.USER_NOT_FOUND);
     }
