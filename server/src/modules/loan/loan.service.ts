@@ -7,10 +7,12 @@ import {
   ActivityAction,
   ActivityTargetType,
 } from '@prisma/client';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
-import { QueryLoanDto } from './dto/queryLoan.dto';
-import { LOAN_MESSAGES } from '../../shared/constants';
+import { ActivityService } from '../activity/activity.service'; 
+import { CreateLogInput } from '../activity/interfaces';
+import { DEVICE_MESSAGES, LOAN_MESSAGES } from '../../shared/constants';
 import { LoanModule } from './loan.module';
+import { QueryLoanDto } from './dto/queryLoan.dto';
+import { CreateLoanDto } from './dto/createLoan.dto';
 
 type LoanWithRelations = Loan & {
   borrower?: { id: string; name: string; email: string; role: string };
@@ -26,6 +28,7 @@ function throwLoanError(code: keyof typeof LOAN_MESSAGES): never {
 export class LoanService {
   // constructor(private prisma: PrismaService) {}
   private prisma = new PrismaClient();
+  constructor (private readonly activityService: ActivityService) {};
 
   private sanitize(loan: LoanWithRelations) {
     const {
@@ -138,6 +141,54 @@ export class LoanService {
       success: true,
       message: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.message,
       data: this.sanitize(loan),
+    }
+  }
+
+  async createLoan(dto: CreateLoanDto, actorId: string) {
+    const device = await this.prisma.device.findUnique({
+      where: { id: dto.deviceId },
+    })
+    const borrower = await this.prisma.user.findUnique({
+      where: { id: actorId },
+    })
+    
+    if(!device || device.isDeleted) {
+      
+    }
+    if(!borrower || borrower.isDeleted) {
+
+    }
+
+    const loan = await this.prisma.loan.create({
+      data: {
+        deviceId: dto.deviceId,
+        borrowerId: actorId,
+        borrowedAt: dto.borrowedAt,
+        returnedAt: null,
+        note: '',
+        status: 'BORROWED',
+      },
+    })
+    
+    await this.prisma.activityLog.create({
+      data: {
+        actorId,
+        action: ActivityAction.LOAN_CREATE,
+        targetType: ActivityTargetType.Loan,
+        targetId: loan.id,
+        details: {
+          type: 'FLOW',
+          deviceName: device?.name,
+          borrowerName: borrower?.name,
+        }
+      }
+    })
+
+    return {
+      status: LOAN_MESSAGES.LOAN_CREATE_SUCCESS.status,
+      success: true,
+      message: LOAN_MESSAGES.LOAN_CREATE_SUCCESS.message,
+      data: device,
     }
   }
 }

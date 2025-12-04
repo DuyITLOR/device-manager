@@ -80,6 +80,10 @@ export const LOAN_MESSAGES = {
     status: 200,
     message: 'Lấy danh sách thiết bị đang (hoặc đã) mượn thành công',
   },
+  LOAN_CREATE_SUCCESS: {
+    status: 201,
+    message: 'Tạo record mượn thiết bị thành công!',
+  },
   USER_BORROWING_DEVICE_FETCH_SUCCESS: {
     status: 200,
     message: 'Tìm người dùng đang mượn thiết bị thành công',
