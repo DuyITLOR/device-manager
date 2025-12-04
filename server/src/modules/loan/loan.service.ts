@@ -7,9 +7,13 @@ import {
   ActivityAction,
   ActivityTargetType,
 } from '@prisma/client';
-import { ActivityService } from '../activity/activity.service'; 
+import { ActivityService } from '../activity/activity.service';
 import { CreateLogInput } from '../activity/interfaces';
-import { DEVICE_MESSAGES, LOAN_MESSAGES } from '../../shared/constants';
+import {
+  DEVICE_MESSAGES,
+  LOAN_MESSAGES,
+  USER_MESSAGES,
+} from '../../shared/constants';
 import { LoanModule } from './loan.module';
 import { QueryLoanDto } from './dto/queryLoan.dto';
 import { CreateLoanDto } from './dto/createLoan.dto';
@@ -19,8 +23,10 @@ type LoanWithRelations = Loan & {
   device?: { id: string; name: string; description: string; status: string };
 };
 
-function throwLoanError(code: keyof typeof LOAN_MESSAGES): never {
-  const err = LOAN_MESSAGES[code];
+function throwAppError(
+  code: string,
+  err: { message: string; status: number },
+): never {
   throw new HttpException({ code, message: err.message }, err.status);
 }
 
@@ -28,7 +34,7 @@ function throwLoanError(code: keyof typeof LOAN_MESSAGES): never {
 export class LoanService {
   // constructor(private prisma: PrismaService) {}
   private prisma = new PrismaClient();
-  constructor (private readonly activityService: ActivityService) {};
+  constructor(private readonly activityService: ActivityService) {}
 
   private sanitize(loan: LoanWithRelations) {
     const {
@@ -90,16 +96,13 @@ export class LoanService {
     const [data, total] = await this.prisma.$transaction([
       this.prisma.loan.findMany({
         where,
-        orderBy: [
-          { status: 'asc' },
-          { borrowedAt: 'desc' }
-        ],
+        orderBy: [{ status: 'asc' }, { borrowedAt: 'desc' }],
         skip: (page - 1) * limit,
         take: limit,
         include: {
           borrower: true,
           device: true,
-        }
+        },
       }),
       this.prisma.loan.count({ where }),
     ]);
@@ -129,11 +132,11 @@ export class LoanService {
       include: {
         borrower: true,
         device: true,
-      }
-    })
+      },
+    });
 
-    if(!loan) {
-      throwLoanError('NO_ACTIVE_LOAN')
+    if (!loan) {
+      throwAppError('NO_ACTIVE_LOAN', LOAN_MESSAGES.NO_ACTIVE_LOAN);
     }
 
     return {
@@ -141,54 +144,87 @@ export class LoanService {
       success: true,
       message: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.message,
       data: this.sanitize(loan),
-    }
+    };
   }
 
   async createLoan(dto: CreateLoanDto, actorId: string) {
     const device = await this.prisma.device.findUnique({
       where: { id: dto.deviceId },
-    })
+    });
     const borrower = await this.prisma.user.findUnique({
       where: { id: actorId },
-    })
-    
-    if(!device || device.isDeleted) {
-      
-    }
-    if(!borrower || borrower.isDeleted) {
+    });
 
+    if (!device) {
+      throwAppError('DEVICE_NOT_FOUND', DEVICE_MESSAGES.DEVICE_NOT_FOUND);
+    }
+    if (device.isDeleted) {
+      throwAppError('DEVICE_IS_DELETED', DEVICE_MESSAGES.DEVICE_IS_DELETED);
+    }
+    if (!borrower) {
+      throwAppError('USER_NOT_FOUND', USER_MESSAGES.USER_NOT_FOUND);
     }
 
-    const loan = await this.prisma.loan.create({
-      data: {
-        deviceId: dto.deviceId,
-        borrowerId: actorId,
-        borrowedAt: dto.borrowedAt,
-        returnedAt: null,
-        note: '',
-        status: 'BORROWED',
-      },
-    })
-    
-    await this.prisma.activityLog.create({
-      data: {
-        actorId,
-        action: ActivityAction.LOAN_CREATE,
-        targetType: ActivityTargetType.Loan,
-        targetId: loan.id,
-        details: {
-          type: 'FLOW',
-          deviceName: device?.name,
-          borrowerName: borrower?.name,
+    const createdLoan = await this.prisma.$transaction(async (tx) => {
+      // create Loan
+      const loan = await tx.loan.create({
+        data: {
+          deviceId: dto.deviceId,
+          borrowerId: actorId,
+          borrowedAt: dto.borrowedAt,
+          returnedAt: null,
+          note: '',
+          status: 'BORROWED',
+        },
+        include: {
+          borrower: true,
+          device: true,
         }
-      }
-    })
+      });
+
+      // update Device status
+      const updatedDevice = await tx.device.update({
+        where: { id: dto.deviceId },
+        data: { status: 'BORROWED' },
+      });
+
+      // create Activity Log for loan creation
+      await tx.activityLog.create({
+        data: {
+          actorId,
+          action: ActivityAction.LOAN_CREATE,
+          targetType: ActivityTargetType.Loan,
+          targetId: loan.id,
+          details: {
+            type: 'FLOW',
+            deviceName: device?.name,
+            borrowerName: borrower?.name,
+          },
+        },
+      });
+
+      // create Activity Log for device status update
+      await tx.activityLog.create({
+        data: {
+          actorId,
+          action: ActivityAction.DEVICE_UPDATE,
+          targetType: ActivityTargetType.Device,
+          targetId: updatedDevice.id,
+          details: {
+            name: updatedDevice.name,
+            status: updatedDevice.status,
+          },
+        },
+      });
+
+      return loan;
+    });
 
     return {
       status: LOAN_MESSAGES.LOAN_CREATE_SUCCESS.status,
       success: true,
       message: LOAN_MESSAGES.LOAN_CREATE_SUCCESS.message,
-      data: device,
-    }
+      data: this.sanitize(createdLoan),
+    };
   }
 }
