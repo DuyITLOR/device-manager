@@ -61,6 +61,7 @@ export const DEVICE_MESSAGES = {
   DEVICE_DELETE_SUCCESS: { status: 200, message: 'Xóa thiết bị thành công' },
   DEVICE_NOT_FOUND: { status: 404, message: 'Thiết bị không tồn tại' },
   DEVICE_DUPLICATE_ID: { status: 409, message: 'Mã thiết bị đã tồn tại' },
+  DEVICE_ALREADY_ASSIGNED: { status: 409, message: 'Thiết bị đang được mượn'},
   DEVICE_QUERY_SUCCESS: {
     status: 200,
     message: 'Lấy danh sách thiết bị thành công',
@@ -74,3 +75,22 @@ export const ACTIVITY_LOG_MESSAGES = {
     message: 'Lấy danh sách nhật ký hoạt động thành công',
   },
 } as const;
+
+export const LOAN_MESSAGES = {
+  LOAN_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Lấy danh sách thiết bị đang (hoặc đã) mượn thành công',
+  },
+  LOAN_CREATE_SUCCESS: {
+    status: 201,
+    message: 'Tạo record mượn thiết bị thành công!',
+  },
+  USER_BORROWING_DEVICE_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Tìm người dùng đang mượn thiết bị thành công',
+  },
+  NO_ACTIVE_LOAN: {
+    status: 404,
+    message: 'Không có ai đang mượn thiết bị này',
+  },
+};
