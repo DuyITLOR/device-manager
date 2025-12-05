@@ -8,8 +8,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { requireAuthAndRole } from '@/lib/utils/auth';
 import { useForm } from 'react-hook-form';
-import AdminHeader from '@/components/layout/admin-header';
-import AdminNavigation from '@/components/admin/admin-navigation';
 import UsersTable from '@/components/admin/users-table';
 import CreateUserDialog from '@/components/admin/create-user-dialog';
 import EditUserDialog from '@/components/admin/edit-user-dialog';
@@ -118,9 +116,6 @@ function AdminUsersContent() {
   return (
     <div className='min-h-screen p-4 md:p-8'>
       <div className='max-w-7xl mx-auto space-y-6'>
-        <AdminHeader />
-        <AdminNavigation />
-
         <Card className='glass-card'>
           <CardHeader>
             <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4'>

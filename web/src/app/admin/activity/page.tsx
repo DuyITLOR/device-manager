@@ -10,8 +10,6 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { requireAuthAndRole } from '@/lib/utils/auth';
-import AdminNavigation from '@/components/admin/admin-navigation';
-import AdminHeader from '@/components/layout/admin-header';
 
 const AdminActivityPage = () => {
   const router = useRouter();
@@ -67,10 +65,6 @@ const AdminActivityPage = () => {
   return (
     <div className='min-h-screen p-4 md:p-8'>
       <div className='max-w-7xl mx-auto space-y-6'>
-        <AdminHeader />
-
-        <AdminNavigation />
-
         <Card className='glass-card'>
           <CardHeader>
             <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>

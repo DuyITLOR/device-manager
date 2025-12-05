@@ -13,9 +13,15 @@ interface AccountDropdownProps {
   onLogout: () => void;
   onChangePassword: () => void;
   userName?: string;
+  userRole?: string;
 }
 
-export default function AccountDropdown({ onLogout, onChangePassword, userName = 'User' }: AccountDropdownProps) {
+export default function AccountDropdown({
+  onLogout,
+  onChangePassword,
+  userName = 'User',
+  userRole,
+}: AccountDropdownProps) {
   return (
     <>
       <DropdownMenu>
@@ -23,7 +29,6 @@ export default function AccountDropdown({ onLogout, onChangePassword, userName =
           <div className='flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-muted transition-colors'>
             <Avatar className='h-8 w-8'>
               <AvatarImage src='/ava.png' alt={userName} />
-              <AvatarFallback>{userName}</AvatarFallback>
             </Avatar>
             <div className='hidden sm:flex flex-col items-start'>
               <span className='text-sm font-medium'>{userName}</span>
@@ -35,6 +40,7 @@ export default function AccountDropdown({ onLogout, onChangePassword, userName =
           <DropdownMenuLabel>
             <div className='flex flex-col space-y-1'>
               <p className='text-sm font-medium'>{userName}</p>
+              {userRole && <p className='text-xs text-muted-foreground'>{userRole}</p>}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
