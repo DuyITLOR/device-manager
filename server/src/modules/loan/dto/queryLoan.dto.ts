@@ -16,7 +16,7 @@ import { LoanStatus } from '@prisma/client';
 export class QueryLoanDto {
   @IsString()
   @IsNotEmpty()
-  borrowerId?: string;
+  borrowerId: string;
 
 	@IsOptional()
   @Transform(({ value }: { value: unknown }) =>
