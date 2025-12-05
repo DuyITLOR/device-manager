@@ -38,19 +38,18 @@ export class UsersController {
     return this.users.create(dto);
   }
 
+  @Patch('/change-password')
+  changePassword(
+    @Body() dto: changePasswordDto,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.users.changePassword(dto, me);
+  }
+
   @Roles(ROLES.ADMIN, ROLES.MANAGER)
   @Patch(':id')
   updateProfile(@Param('id') id: string, @Body() dto: updateUserDto) {
     return this.users.updateProfile(id, dto);
-  }
-
-  @Patch(':id/change-password')
-  changePassword(
-    @Param('id') id: string,
-    @Body() dto: changePasswordDto,
-    @CurrentUser() me: { id: string; role: Role },
-  ) {
-    return this.users.changePassword(id, dto, me);
   }
 
   @Roles(ROLES.ADMIN)

@@ -136,21 +136,17 @@ export class UsersService {
   }
 
   async changePassword(
-    id: string,
     dto: changePasswordDto,
     meta: { id: string; role: Role },
   ) {
-    if (meta.role === ROLES.USER && meta.id === id)
-      throwUserError('USER_FORBIDDEN_CHANGE_PASSWORD_OTHERS');
-
-    const user = await this.findById(id);
+    const user = await this.findById(meta.id);
 
     const valid = await comparePassword(dto.currentPassword, user.password);
     if (!valid) throwUserError('USER_WRONG_PASSWORD');
 
     const hashed = await hashPassword(dto.newPassword);
     await this.prisma.user.update({
-      where: { id },
+      where: { id: meta.id },
       data: { password: hashed },
     });
 
