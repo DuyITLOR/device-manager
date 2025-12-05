@@ -1,6 +1,7 @@
 import type { User, UpdateUserDto, UserParams, UserListResponse } from '../types/user';
 import { API_BASE_URL } from '../constant/api';
 import { getToken } from '../utils/auth';
+import { ChangePasswordResponse, ChangePassworđDto } from '../types/user';
 
 export async function fetchAllUsers(params?: UserParams): Promise<UserListResponse> {
   try {
@@ -110,6 +111,37 @@ export async function deleteUser(id: string) {
       throw err;
     }
     return json?.data ?? json;
+  } catch (e: any) {
+    const msg = e?.message ?? 'Lỗi khi kết nối đến server';
+    const err: any = new Error(msg);
+    err.status = e?.status ?? (e instanceof TypeError ? 0 : 500);
+    err.data = e?.data ?? null;
+    throw err;
+  }
+}
+
+export async function changePassword(payload: ChangePassworđDto): Promise<ChangePasswordResponse> {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE_URL}/api/users/change-password`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+
+    if (!res.ok) {
+      const msg = json?.message ?? json?.error ?? 'Đổi mật khẩu thất bại';
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = json;
+      throw err;
+    }
+
+    return json as ChangePasswordResponse;
   } catch (e: any) {
     const msg = e?.message ?? 'Lỗi khi kết nối đến server';
     const err: any = new Error(msg);

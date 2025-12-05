@@ -30,3 +30,14 @@ export interface UserListResponse {
   meta: Meta;
   data: User[];
 }
+
+export type ChangePassworđDto = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export type ChangePasswordResponse = {
+  status: number;
+  success: boolean;
+  message: string;
+};
