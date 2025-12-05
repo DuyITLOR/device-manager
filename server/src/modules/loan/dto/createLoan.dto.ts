@@ -1,14 +1,21 @@
-import { LoanStatus } from "@prisma/client";
-import { IsDate, IsNotEmpty, isNotEmpty, IsOptional, IsString } from "class-validator";
-import { Type } from "class-transformer";
+import { LoanStatus } from '@prisma/client';
+import {
+  IsArray,
+  IsDate,
+  IsNotEmpty,
+  isNotEmpty,
+  IsString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateLoanDto {
-	@IsString()
-	@IsNotEmpty()
-	deviceId: string;
-	
-	@Type(() => Date)
-	@IsDate()
-	@IsNotEmpty()
-	borrowedAt: Date;
+  @IsArray()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  deviceIds: string[];
+
+  @Type(() => Date)
+  @IsDate()
+  @IsNotEmpty()
+  borrowedAt: Date;
 }
