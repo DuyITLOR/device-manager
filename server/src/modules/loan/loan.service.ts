@@ -17,6 +17,8 @@ import {
 import { LoanModule } from './loan.module';
 import { QueryLoanDto } from './dto/queryLoan.dto';
 import { CreateLoanDto } from './dto/createLoan.dto';
+import { UpdateLoanDto } from './dto/updateLoan.dto';
+import { stat } from 'fs';
 
 type LoanWithRelations = Loan & {
   borrower?: { id: string; name: string; email: string; role: string };
@@ -136,15 +138,18 @@ export class LoanService {
     });
 
     if (!loan) {
-      throwAppError('NO_ACTIVE_LOAN', LOAN_MESSAGES.NO_ACTIVE_LOAN);
+      return {
+        success: false,
+        message: LOAN_MESSAGES.NO_ACTIVE_LOAN.message,
+        data: null,
+      };
+    } else {
+      return {
+        success: true,
+        message: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.message,
+        data: this.sanitize(loan),
+      };
     }
-
-    return {
-      status: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.status,
-      success: true,
-      message: LOAN_MESSAGES.USER_BORROWING_DEVICE_FETCH_SUCCESS.message,
-      data: this.sanitize(loan),
-    };
   }
 
   async createLoan(dto: CreateLoanDto, actorId: string) {
@@ -162,7 +167,10 @@ export class LoanService {
       throwAppError('DEVICE_IS_DELETED', DEVICE_MESSAGES.DEVICE_IS_DELETED);
     }
     if (device.status === 'BORROWED') {
-      throwAppError('DEVICE_ALREADY_ASSIGNED', DEVICE_MESSAGES.DEVICE_ALREADY_ASSIGNED);
+      throwAppError(
+        'DEVICE_ALREADY_ASSIGNED',
+        DEVICE_MESSAGES.DEVICE_ALREADY_ASSIGNED,
+      );
     }
     if (!borrower) {
       throwAppError('USER_NOT_FOUND', USER_MESSAGES.USER_NOT_FOUND);
@@ -182,7 +190,7 @@ export class LoanService {
         include: {
           borrower: true,
           device: true,
-        }
+        },
       });
 
       // update Device status
