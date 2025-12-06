@@ -210,8 +210,8 @@ export class UsersService {
     };
   }
 
-  async getNameByCode(code: string) {
-    const user = await this.prisma.user.findFirst({ where: { code } });
+  async getNameByCode(uuid: string) {
+    const user = await this.prisma.user.findFirst({ where: { code: uuid } });
 
     if (!user) throwUserError('USER_NOT_FOUND');
     if (user.isDeleted) throwUserError('USER_IS_DELETED');

@@ -45,8 +45,8 @@ export class MqttService implements OnModuleInit {
     this.client.on('message', (topic: string, payload: Buffer) => {
       (async () => {
         if (topic == rfidcode) {
-          const code = payload.toString();
-          console.log('[MQTT] Recieve code: ', code);
+          const code = payload.toString().trim();
+          console.log('[MQTT] Recieve code:', code);
 
           try {
             const name = await this.userService.getNameByCode(code);

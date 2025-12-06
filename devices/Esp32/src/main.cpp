@@ -1,481 +1,194 @@
 #include <Arduino.h>
-#include <LiquidCrystal_I2C.h>
-#include <SPI.h>
-#include <MFRC522.h>
-#include <vector>
-#include <WiFi.h>
 #include <esp_now.h>
 #include <WiFi.h>
-#include <WiFiClientSecure.h>
-#include <PubSubClient.h>
+#include <vector>
 
-// Pin definitions
-/*
-  LCD pins SDA: 21 - SCL: 22
-  RFID pins SDA: 5 - SCK: 18 - MOSI: 23 - MISO: 19 - RST: 17
-*/
-// WiFi credentials
-const char *ssid = "THREE O'CLOCK";
-const char *password = "3open24h";
+#include "config.h"
+#include "lcd.h"
+#include "encoder.h"
+#include "rfid.h"
+#include "mqtt.h"
+#include "handle.h"
 
-// MQTT broker settings
-const char *mqtt_server = "7b1f4b73bed84278adf976988bc34ed9.s1.eu.hivemq.cloud";
-const int mqtt_port = 8883;
-const char *mqtt_user = "Robotics";
-const char *mqtt_pass = "Robotics123";
-
-// Create secure client
-WiFiClientSecure espClient;
-PubSubClient client(espClient);
-
-// RFID pins
-const int RIFD_SDA = 5;  // SDA
-const int RIFD_RST = 17; // RST
-
-// Rotary encoder pins
-const int RE_pinA = 14;  // CLK
-const int RE_pinB = 27;  // DT
-const int RE_pinSW = 26; // SW
-
-// Global variables
-// String deviceList[10] = {"Quat1", "Den1", "Quat2", "Den2", "May do dien1", "May do dien2", "Tivi", "Tu lanh", "May giat", "Dieu hoa"};
-std::vector<String> deviceList;
-String uid = "";
-String userName = "";
-volatile long encoderCount = 0;
-volatile uint8_t prevAB = 0;
-bool lastPressed = false;
-uint32_t lastUi = 0;
-long lastShown = LONG_MIN;
-
-int RE_index = 0;
-int lastRE_index = 0;
-int scrollOffset = 0;
-double startSession = 0;
 int state = 0;
-int confirmDelete = 0;
-int indexDelete = -1;  // Use to
-int lastConfirmed = 0; // Use avoid clear LCD too many times for delete
-int checkpoint_1 = 0;
+int checkpoint = 0;
+String lastName = "";
+int lastIndex = 0;
 
-// Variable to clear
-int screenClear = 0;
-int screenDeleteClear = 0;
+// Đây là biến trước khi xóa 
+int selectedIndexDelete = 0;
+bool checkpointConvert = true;
 
-// table
-static const int8_t dirTable[4][4] = {
-    /*prev\curr: 00  01  10  11 */
-    /*00*/ {0, -1, +1, 0},
-    /*01*/ {+1, 0, 0, -1},
-    /*10*/ {-1, 0, 0, +1},
-    /*11*/ {0, +1, -1, 0}};
+static int scrollOffset = 0;
 
-MFRC522 mfrc522(RIFD_SDA, RIFD_RST);
-LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-void IRAM_ATTR handleEncoder()
+std::vector<String> device = {"Device_A", "Device_B", "Device_C", "Device_D", "Device_E"};
+
+void reset()
 {
-  uint8_t a = digitalRead(RE_pinA);
-  uint8_t b = digitalRead(RE_pinB);
+    state = 0;
+    checkpoint = 0;
+    receivedName = "";
+    lastName = "";
+    lastIndex = 0;
+    encoderCount = 0;
 
-  // Combine to state
-  uint8_t currAB = (a << 1) | b;
-
-  // Check current state
-  int8_t delta = dirTable[prevAB][currAB];
-  if (delta != 0)
-  {
-    encoderCount += delta;
-  }
-
-  prevAB = currAB;
+    Serial.println("[STATE_1] Exiting to STATE 0");
 }
 
-void displayWelcome()
+void button(int nextState)
 {
-  lcd.setCursor(7, 0);
-  lcd.print("Welcome!");
-  lcd.setCursor(2, 1);
-  lcd.print("Robotics Iot Club");
-  lcd.setCursor(0, 2);
-  lcd.print("CREATED BY:");
-  lcd.setCursor(1, 3);
-  lcd.print("N.Duy-M.Dang-A.Khoa");
-}
-
-void mqttCallback(char *topic, byte *payload, unsigned int length)
-{
-  String msg = "";
-
-  for (int i = 0; i < length; i++)
-  {
-    msg += (char)payload[i];
-  }
-  userName = msg;
-  Serial.print("[MQTT] Message from server: ");
-  Serial.println(userName);
-
-  // lcd.clear();
-  // lcd.setCursor(0, 0);
-  // lcd.print("User:");
-  // lcd.setCursor(0, 1);
-  // lcd.print(msg);
-}
-
-void reconnectMQTT()
-{
-  while (!client.connected())
-  {
-    Serial.print("[MQTT] Connecting...");
-
-    if (client.connect("ESP32Client", mqtt_user, mqtt_pass))
+    if(digitalRead(RE_pinSW) == LOW)
     {
-      Serial.println(" Connected!");
-
-      client.subscribe("rfid/server/name");
-      Serial.println("[MQTT] Subscribed to rfid/server/name");
+       while(digitalRead(RE_pinSW) == LOW);
+       state = nextState;
+       encoderCount = 0;
+       checkpoint = 0;
     }
-    else
-    {
-      Serial.print(" Failed, rc=");
-      Serial.println(client.state());
-      delay(2000);
-    }
-  }
-}
-
-void displayDelete(String item)
-{
-  lcd.setCursor(0, 1);
-  lcd.print("Deleted: " + item + "   ");
-  lcd.setCursor(0, 2);
-  lcd.print(confirmDelete == 0 ? "  Yes" : "> Yes");
-  lcd.setCursor(0, 3);
-  lcd.print(confirmDelete == 1 ? "  No" : "> No");
-}
-
-int getRE_Index()
-{
-  if (millis() - lastUi >= 50)
-  {
-    lastUi = millis();
-
-    noInterrupts();
-    long count = encoderCount;
-    interrupts();
-
-    if (count != lastShown)
-    {
-      lastShown = count;
-      return count;
-    }
-  }
-  return lastShown;
-}
-
-String readRFID()
-{
-  if (!mfrc522.PICC_IsNewCardPresent())
-    return "";
-  if (!mfrc522.PICC_ReadCardSerial())
-    return "";
-
-  String id = "";
-  for (byte i = 0; i < mfrc522.uid.size; i++)
-    id += String(mfrc522.uid.uidByte[i], HEX);
-
-  id.toUpperCase();
-  return id;
-}
-
-void removeDevices(int index)
-{
-  if (index >= 0 && index < deviceList.size())
-  {
-    Serial.println("Removing device: " + deviceList[index]);
-    deviceList.erase(deviceList.begin() + index);
-    Serial.println("Device removed. Current count: " + String(deviceList.size()));
-  }
-}
-
-String normalize(String name)
-{
-  name.trim();
-  name.toLowerCase();
-  return name;
-}
-
-bool checkSame(String name)
-{
-  String normName = normalize(name);
-  for (const String &device : deviceList)
-  {
-    if (normalize(device) == normName)
-    {
-      return true;
-    }
-  }
-  return false;
-}
-
-void addDevices(String name)
-{
-  if (!checkSame(name))
-  {
-    deviceList.push_back(name);
-    Serial.println("Device added: " + name);
-  }
-  else
-  {
-    Serial.println("Device already exists: " + name);
-  }
-
-  RE_index = deviceList.size() - 1;
-  encoderCount = RE_index * 4;
-  lastRE_index = RE_index;
-}
-
-void onReceive(const uint8_t *mac, const uint8_t *incomingData, int len)
-{
-  char senderMac[18];
-  snprintf(senderMac, sizeof(senderMac),
-           "%02X:%02X:%02X:%02X:%02X:%02X",
-           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-  Serial.printf("\n[INFO] Data received from: %s\n", senderMac);
-
-  String msg = String((char *)incomingData);
-  Serial.printf("[INFO] Message: %s\n", msg.c_str());
-  addDevices(msg);
 }
 
 void setup()
 {
-  Serial.begin(115200);
+    Serial.begin(115200);
 
-  pinMode(RE_pinA, INPUT_PULLUP);
-  pinMode(RE_pinB, INPUT_PULLUP);
-  pinMode(RE_pinSW, INPUT_PULLUP);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(ssid, password);
+    Serial.print("[WIFI] Connecting");
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\n[WIFI] Connected!");
+    Serial.print("[WIFI] IP: ");
+    Serial.println(WiFi.localIP());
 
-  // First state
-  prevAB = (digitalRead(RE_pinA) << 1) | digitalRead(RE_pinB);
-
-  // Setup to interupts
-  attachInterrupt(digitalPinToInterrupt(RE_pinA), handleEncoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(RE_pinB), handleEncoder, CHANGE);
-
-  // RFID setup
-  SPI.begin();
-  mfrc522.PCD_Init();
-  Serial.println("[INFO] Place your RFID card near the reader...");
-
-  // LCD setup
-  lcd.init();
-  lcd.backlight();
-  displayWelcome();
-  delay(2000);
-  WiFi.mode(WIFI_STA);
-  Serial.println("[INFO] MAC address: " + WiFi.macAddress());
-
-  if (esp_now_init() != ESP_OK)
-  {
-    Serial.println("[ERROR] Error initializing ESP-NOW");
-    return;
-  }
-
-  esp_now_register_recv_cb(onReceive);
-  Serial.println("[INFO] Ready to receive via ESP-NOW!");
-
-  // MQTT setup
-  espClient.setInsecure(); // Bỏ xác thực chứng chỉ SSL
-  client.setServer(mqtt_server, mqtt_port);
-  client.setCallback(mqttCallback);
-
-  // Kết nối WiFi
-  WiFi.begin(ssid, password);
-  Serial.print("[WIFI] Connecting");
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\n[WIFI] Connected!");
-  Serial.print("[WIFI] IP: ");
-  Serial.println(WiFi.localIP());
+    initLCD();
+    initEncoder();
+    initRFID();
+    initMQTT();
 }
+
+
 
 void loop()
 {
-  client.loop();
-  if (!client.connected())
-  {
-    reconnectMQTT();
-  }
-
-  uid = readRFID();
-  if (uid != "")
-  {
-    Serial.println("[RFID] UID read: " + uid);
-    Serial.println("[MQTT] Publishing UID: " + uid);
-    client.publish("rfid/esp32/code", uid.c_str());
-  } else userName = "";
-  if (userName != "")
-  {
-   
-    // Serial.println("[MQTT] Sent code: " + uid);
-    if (screenClear == 0)
+    if (!client.connected())
     {
-      lcd.clear();
-      screenClear = 1;
+        reconnectMQTT();
     }
 
+    client.loop();
     if (state == 0)
     {
-      if (digitalRead(RE_pinSW) == LOW)
-      {
-        state = 1;
-        lcd.clear();
-        delay(300);
-      }
-      screenDeleteClear = 0;
-      startSession = millis();
-      lcd.setCursor(0, 0);
-      lcd.print("Name: " + userName + "   ");
-
-      if (deviceList.size() == 0)
-      {
-        lcd.setCursor(0, 1);
-        lcd.print("No devices found.   ");
-        checkpoint_1 = 0;
-        return;
-      }
-      else if (deviceList.size() > 0 && checkpoint_1 == 0)
-      {
-        lcd.clear();
-        checkpoint_1 = 1;
-      }
-
-      if (deviceList.size() < 10)
-      {
-        lcd.setCursor(19, 0);
-        lcd.print(deviceList.size());
-      }
-      else
-      {
-        lcd.setCursor(18, 0);
-        lcd.print(deviceList.size());
-      }
-      RE_index = getRE_Index() / 4;
-      if (RE_index < 0)
-      {
-        RE_index = 0;
-        encoderCount = 0;
-      }
-      else if (RE_index >= deviceList.size())
-      {
-        RE_index = deviceList.size() - 1;
-        encoderCount = RE_index * 4;
-      }
-
-      if (RE_index < scrollOffset)
-      {
-        scrollOffset = RE_index;
-      }
-      else if (RE_index >= scrollOffset + 3)
-      {
-        scrollOffset = RE_index - 2;
-      }
-
-      if (RE_index != lastRE_index)
-      {
-        lastRE_index = RE_index;
-        lastShown = LONG_MIN;
-        lcd.clear();
-      }
-
-      for (int i = 0; i < 3; i++)
-      {
-        int displayRE_Index = scrollOffset + i;
-        lcd.setCursor(0, i + 1);
-        if (displayRE_Index == RE_index)
+        if (checkpoint == 0)
         {
-          lcd.print("> " + deviceList[displayRE_Index] + "   ");
+            lcd.clear();
+            showWelcome();
+            checkpoint = 1;
+            Serial.println("[STATE] Initialized LCD");
         }
-        else if (displayRE_Index < deviceList.size())
+        Serial.println("[STATE] Waiting for RFID scan...");
+        String uid = readRFID();
+
+        if (uid != "" && ready)
         {
-          lcd.print("  " + deviceList[displayRE_Index] + "   ");
+            Serial.print("[RFID] UID: " + String(uid));
+            sendRFID(uid);
+            state = 1;
+            checkpoint = 0;
         }
-        else
+        delay(500);
+    }
+    else if (state == 1)
+    {
+        if (checkpoint == 0)
         {
-          lcd.print("                     ");
+            lcd.clear();
+            checkpoint = 1;
         }
-      }
+        if (receivedName != "" && receivedName != lastName)
+        {
+            Serial.println("[STATE_1] Received Name: " + receivedName);
+            lcd.clear();
+            showUser(receivedName, 0);
+            lastName = receivedName;
+        }
+
+        int index = getEncoderValue(0, 2);
+        if (index != -999 && index != lastIndex)
+        {
+            showUser(receivedName, index);
+            lastIndex = index;
+        }
+        int data = digitalRead(RE_pinSW);
+        if (data == LOW)
+        {
+            while(digitalRead(RE_pinSW) == LOW);
+            Serial.println("[STATE_1] Button Pressed at index: " + String(lastIndex));
+            if (lastIndex == 2)
+            {
+                reset();
+            }
+            else
+            {
+                state = 2;
+                checkpoint = 0;
+                mode = lastIndex + 1;
+                encoderCount = 0;
+                Serial.println("[STATE_1] Mode: " + String(mode));
+            }
+        }
     }
-    else if (state == 1 && indexDelete == -1)
+    else if (state == 2)
     {
-      indexDelete = RE_index;
-      Serial.println("indexDelete: " + String(indexDelete));
+        if (checkpoint == 0)
+        {
+            lcd.clear();
+            checkpoint = 1;
+        }
+      
+        handleScroll(lastIndex, scrollOffset, device.size());
+        showDeviceList(device, lastIndex, scrollOffset, checkpointConvert);
+        selectedIndexDelete = lastIndex;
+        button(3);
     }
-    else if (state == 1 && indexDelete != -1)
+    else if(state == 3)
     {
-      startSession = millis();
-      confirmDelete = (encoderCount / 4) % 2;
+        if(checkpoint == 0)
+        {
+            lcd.clear();
+            checkpoint = 1;
+        }
 
-      if (confirmDelete < 0)
-      {
-        confirmDelete = 0;
-      }
+        int index =  getEncoderValue(0, 1);
+        if(index != -999 && index != lastIndex)
+        {
+            lastIndex = index;
+        } 
 
-      // Serial.println("confirmDelete: " + String(confirmDelete));
-      if (lastConfirmed != confirmDelete)
-      {
-        lastConfirmed = confirmDelete;
-        lcd.clear();
-      }
-      if (screenDeleteClear == 0)
-      {
-        lcd.clear();
-        screenDeleteClear = 1;
-      }
+        showDeleteConfirmation(device[selectedIndexDelete], lastIndex);
 
-      displayDelete(deviceList[RE_index]);
-
-      if (digitalRead(RE_pinSW) == LOW && confirmDelete == 1)
-      {
-        while (digitalRead(RE_pinSW) == LOW)
-          ;
-        removeDevices(indexDelete);
-        lcd.clear();
-        encoderCount = indexDelete * 4;
-        Serial.println("indexDelete: " + String(indexDelete));
-        indexDelete = -1;
-        state = 0;
-      }
-      else if (digitalRead(RE_pinSW) == LOW && confirmDelete == 0)
-      {
-        while (digitalRead(RE_pinSW) == LOW)
-          ;
-        lcd.clear();
-        encoderCount = indexDelete * 4;
-        Serial.println("indexDelete: " + String(indexDelete));
-        indexDelete = -1;
-        state = 0;
-      }
+        int data = digitalRead(RE_pinSW);
+        if (data == LOW)
+        {
+            while(digitalRead(RE_pinSW) == LOW);
+            Serial.println("[STATE_3] Button Pressed at index: " + String(lastIndex));
+            if (lastIndex == 1)
+            {
+                device.erase(device.begin() + selectedIndexDelete);
+                state = 2;
+                lastIndex = selectedIndexDelete;
+                checkpoint = 0;
+                checkpointConvert = false;
+            }
+            else
+            {
+                state = 2;
+                lastIndex = selectedIndexDelete;
+                checkpoint = 0;
+                checkpointConvert = false;
+            }
+        }
     }
-  }
-  else
-  {
-    if (millis() - startSession > 5000)
-    {
-      encoderCount = 0;
-      RE_index = 0;
-      scrollOffset = 0;
-      lastRE_index = -1;
-      lcd.clear();
-      deviceList.clear();
-      displayWelcome();
-      startSession = millis();
-      screenClear = 0;
-    }
-  }
 }
