@@ -9,7 +9,7 @@ import {
 export class GetTransferRequestsDto {
 	@IsString()
 	@IsNotEmpty()
-	toUserId: string;
+	fromUserId: string; // ID of the user who is in possesion of the device
 
 	@IsOptional()
 	@Transform(({value} : {value: unknown}) => 

@@ -104,8 +104,16 @@ export const LOAN_MESSAGES = {
 };
 
 export const TRANSFER_MESSAGES = {
-  TRANFER_REQUESTS_FETCH_SUCCESS: {
+  TRANSFER_REQUESTS_FETCH_SUCCESS: {
     status: 200,
     message: 'Lấy các yêu cầu chuyển thiết bị thành công',
   },
+  TRANSFER_CREATE_SUCCESS: {
+    status: 201,
+    message: 'Tạo yêu cầu chuyển quyền thiết bị thành công',
+  },
+  TRANSFER_SELF_TO_SELF: {
+    status: 400,
+    message: 'Không thể yêu cầu chuyển thiết bị mình đang mượn cho chính mình',
+  }
 };

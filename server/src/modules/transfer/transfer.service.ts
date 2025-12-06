@@ -9,11 +9,17 @@ import {
 } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { CreateLogInput } from '../activity/interfaces';
-import { LOAN_MESSAGES, TRANSFER_MESSAGES } from '../../shared/constants';
+import {
+  DEVICE_MESSAGES,
+  LOAN_MESSAGES,
+  TRANSFER_MESSAGES,
+} from '../../shared/constants';
 import { GetTransferRequestsDto } from './dto/getTransferRequest.dto';
+import { CreateTransferDto } from './dto/createTransfer.dto';
+import { text } from 'pdfkit';
 
 type TransferWithRelations = Transfer & {
-  loan: Loan & { device: Device | null } | null;
+  loan: (Loan & { device: Device | null }) | null;
   fromUser: User | null;
   toUser: User | null;
 };
@@ -31,16 +37,19 @@ export class TransferService {
   constructor(private readonly activityService: ActivityService) {}
 
   private sanitize(transfer: TransferWithRelations) {
-    const { id, loanId, status, requestedAt, loan, fromUser, toUser } = transfer;
+    const { id, loanId, status, requestedAt, loan, fromUser, toUser } =
+      transfer;
     return {
       id,
       status,
       requestedAt,
       loanId,
-      device: loan?.device ? {
-        id: loan.device.id,
-        name: loan.device.name
-      } : null,
+      device: loan?.device
+        ? {
+            id: loan.device.id,
+            name: loan.device.name,
+          }
+        : null,
       sender: fromUser
         ? {
             id: fromUser.id,
@@ -58,15 +67,16 @@ export class TransferService {
     };
   }
 
+  // transfer requests from A to B, so A (fromUserId) needs to approve the requests.
   async getTransferRequests(query: GetTransferRequestsDto) {
-    const { toUserId, search, limit = 20, page = 1 } = query;
+    const { fromUserId, search, limit = 20, page = 1 } = query;
     const where: Prisma.TransferWhereInput = {};
 
-    where.toUserId = toUserId;
+    where.fromUserId = fromUserId;
     if (search) {
       where.OR = [
         {
-          fromUser: {
+          toUser: {
             name: {
               contains: search,
               mode: 'insensitive',
@@ -105,9 +115,9 @@ export class TransferService {
     ]);
 
     return {
-      status: TRANSFER_MESSAGES.TRANFER_REQUESTS_FETCH_SUCCESS.status,
+      status: TRANSFER_MESSAGES.TRANSFER_REQUESTS_FETCH_SUCCESS.status,
       success: true,
-      message: TRANSFER_MESSAGES.TRANFER_REQUESTS_FETCH_SUCCESS.message,
+      message: TRANSFER_MESSAGES.TRANSFER_REQUESTS_FETCH_SUCCESS.message,
       meta: {
         page,
         limit,
@@ -116,6 +126,67 @@ export class TransferService {
         hasMore: page < Math.ceil(total / limit),
       },
       data: data.map((transfer) => this.sanitize(transfer)),
+    };
+  }
+
+  async createTransfer(dto: CreateTransferDto, requesterId: string) {
+    const { fromUserId, loanId } = dto;
+    const loan = await this.prisma.loan.findUnique({
+      where: { id: loanId, status: 'BORROWED' },
+      include: {
+        device: true,
+        borrower: true,
+      },
+    });
+
+    if (!loan) {
+      throwAppError('LOAN_NOT_FOUND', LOAN_MESSAGES.LOAN_NOT_FOUND);
+    }
+    if (loan.borrowerId === requesterId) {
+      throwAppError(
+        'TRANSFER_SELF_TO_SELF',
+        TRANSFER_MESSAGES.TRANSFER_SELF_TO_SELF,
+      );
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const transfer = await tx.transfer.create({
+        data: {
+          loanId,
+          fromUserId,
+          toUserId: requesterId,
+          requestedAt: new Date(),
+          status: 'PENDING',
+        },
+        include: {
+          loan: { include: { device: true } },
+          fromUser: true,
+          toUser: true,
+        },
+      });
+
+      const logData: CreateLogInput = {
+        actorId: requesterId, // toUserId in the record
+        action: 'TRANSFER_REQUEST',
+        targetType: 'Transfer',
+        targetId: transfer.id,
+        details: {
+          type: 'FLOW',
+          deviceName: loan.device.name,
+          userName: transfer.fromUser ? transfer.fromUser.name : 'Unknown',
+        },
+      };
+
+      await tx.activityLog.create({ data: logData as any });
+
+      return transfer;
+    });
+
+    return {
+      status: TRANSFER_MESSAGES.TRANSFER_CREATE_SUCCESS.status,
+      success: true,
+      message: TRANSFER_MESSAGES.TRANSFER_CREATE_SUCCESS.message,
+      data: this.sanitize(result),
     };
   }
 }
