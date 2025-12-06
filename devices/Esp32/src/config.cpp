@@ -23,5 +23,9 @@ const int RE_pinSW = 26;
 const char* TOPIC_RFID_SEND = "rfid/esp32/code";
 const char* TOPIC_NAME_RECV = "rfid/server/name";
 
+const char* TOPIC_DEVICE_CHECK  = "devices/check";
+const char* TOPIC_DEVICE_RESULT = "devices/result";
+
+
 
 int mode = 0;

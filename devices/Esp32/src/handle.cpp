@@ -4,6 +4,8 @@
 
 bool isDelete = false;
 
+std::vector<DeviceItem> deviceList;
+
 String getLastTwoWords(String name) {
     name.trim();
 
@@ -35,4 +37,34 @@ int handleScroll(int &selectedIndex, int &scrollOffset, int maxItems)
 
 
     return selectedIndex;
+}
+
+void saveUUID(const String &uuid) {
+    for (auto &item : deviceList) {
+        if (item.uuid == uuid) {
+            Serial.println("[DEVICE] UUID đã tồn tại → không thêm");
+            return;
+        }
+    }
+
+    DeviceItem newItem;
+    newItem.uuid = uuid;
+    newItem.name = "";
+    deviceList.push_back(newItem);
+    Serial.println("[DEVICE] Added UUID: " + uuid);
+}
+
+void saveName(const String &nameInput) {
+
+    if (deviceList.empty()) {
+        Serial.println("[DEVICE] Warning: No UUID available for this name!");
+        return;
+    }
+
+    String name = nameInput;
+    if (name.length() > 15)
+        name = name.substring(0, 15);
+    deviceList.back().name = name;
+
+    Serial.println("[DEVICE] Updated name: " + name);
 }

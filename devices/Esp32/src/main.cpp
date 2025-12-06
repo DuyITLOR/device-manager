@@ -9,6 +9,7 @@
 #include "rfid.h"
 #include "mqtt.h"
 #include "handle.h"
+#include "esp_now_recv.h"
 
 int state = 0;
 int checkpoint = 0;
@@ -21,8 +22,6 @@ bool checkpointConvert = true;
 
 static int scrollOffset = 0;
 
-
-std::vector<String> device = {"Device_A", "Device_B", "Device_C", "Device_D", "Device_E"};
 
 void reset()
 {
@@ -67,6 +66,7 @@ void setup()
     initEncoder();
     initRFID();
     initMQTT();
+    initEspNow();
 }
 
 
@@ -148,8 +148,8 @@ void loop()
             checkpoint = 1;
         }
       
-        handleScroll(lastIndex, scrollOffset, device.size());
-        showDeviceList(device, lastIndex, scrollOffset, checkpointConvert);
+        handleScroll(lastIndex, scrollOffset, deviceList.size());
+        showDeviceList(lastIndex, scrollOffset, checkpointConvert);
         selectedIndexDelete = lastIndex;
         button(3);
     }
@@ -167,7 +167,7 @@ void loop()
             lastIndex = index;
         } 
 
-        showDeleteConfirmation(device[selectedIndexDelete], lastIndex);
+        showDeleteConfirmation(deviceList[selectedIndexDelete].name, lastIndex);
 
         int data = digitalRead(RE_pinSW);
         if (data == LOW)
@@ -176,7 +176,7 @@ void loop()
             Serial.println("[STATE_3] Button Pressed at index: " + String(lastIndex));
             if (lastIndex == 1)
             {
-                device.erase(device.begin() + selectedIndexDelete);
+                deviceList.erase(deviceList.begin() + selectedIndexDelete);
                 state = 2;
                 lastIndex = selectedIndexDelete;
                 checkpoint = 0;

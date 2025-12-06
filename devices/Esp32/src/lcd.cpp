@@ -1,6 +1,6 @@
 #include "lcd.h"
-#include "config.h" 
-
+#include "config.h"
+#include "handle.h"
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
@@ -8,40 +8,37 @@ static int lastSel = -1;
 static int lastScroll = -1;
 
 byte arrowRight[] = {
-  B00000,
-  B00100,
-  B00110,
-  B11111,
-  B11111,
-  B00110,
-  B00100,
-  B00000
-};
+    B00000,
+    B00100,
+    B00110,
+    B11111,
+    B11111,
+    B00110,
+    B00100,
+    B00000};
 
 byte arrowLeft[] = {
-  B00000,
-  B00100,
-  B01100,
-  B11111,
-  B11111,
-  B01100,
-  B00100,
-  B00000
-};
-
+    B00000,
+    B00100,
+    B01100,
+    B11111,
+    B11111,
+    B01100,
+    B00100,
+    B00000};
 
 byte devices[] = {
-  B00000,
-  B10001,
-  B11011,
-  B11111,
-  B11111,
-  B11111,
-  B11011,
-  B00000
-};
+    B00000,
+    B10001,
+    B11011,
+    B11111,
+    B11111,
+    B11111,
+    B11011,
+    B00000};
 
-void initLCD() {
+void initLCD()
+{
     lcd.init();
     lcd.backlight();
     lcd.createChar(0, arrowRight);
@@ -49,7 +46,8 @@ void initLCD() {
     lcd.createChar(2, arrowLeft);
 }
 
-void showWelcome() {
+void showWelcome()
+{
     lcd.setCursor(7, 0);
     lcd.print("Welcome!");
     lcd.setCursor(2, 1);
@@ -64,13 +62,17 @@ void showUser(String name, int index = 0)
 {
     lcd.clear();
     lcd.setCursor(0, 0);
-    if(index == 0)
+    if (index == 0)
     {
-        lcd.setCursor(2,2);
-    } else if(index == 1){
-        lcd.setCursor(14,2);
-    } else {
-        lcd.setCursor(8,3);
+        lcd.setCursor(2, 2);
+    }
+    else if (index == 1)
+    {
+        lcd.setCursor(14, 2);
+    }
+    else
+    {
+        lcd.setCursor(8, 3);
     }
 
     lcd.write(0);
@@ -86,11 +88,10 @@ void showUser(String name, int index = 0)
 
     lcd.setCursor(9, 3);
     lcd.print("EXIT");
-    
 }
 
-
-void showDeviceList(const std::vector<String>& devices, int selectedIndex, int scrollOffset, bool &checkpointConvert) {
+void showDeviceList(int selectedIndex, int scrollOffset, bool &checkpointConvert)
+{
     if (selectedIndex == lastSel && scrollOffset == lastScroll && checkpointConvert)
         return;
 
@@ -100,26 +101,41 @@ void showDeviceList(const std::vector<String>& devices, int selectedIndex, int s
     lcd.setCursor(0, 0);
     lcd.write(1);
     lcd.setCursor(1, 0);
-    lcd.print   ("Devices: " + String(devices.size()));
+    lcd.print("Devices: " + String(deviceList.size()));
 
+    if (deviceList.size() == 0)
+    {
+        lcd.setCursor(0, 2);
+        lcd.print("No deviceList Found");
+        return;
+    }
+    else
+    {
+        lcd.setCursor(19, 0);
+        if (mode == 1)
+            lcd.write(0);
+        else if (mode == 2)
+            lcd.write(2);
 
-    lcd.setCursor(19, 0);
-    if(mode == 1)
-        lcd.write(0);
-    else if(mode == 2)
-        lcd.write(2);
-
-    for (int i = 0; i < 3; i++) {
-        int displayIndex = scrollOffset + i;
-        lcd.setCursor(0, i + 1);
-        if (displayIndex < devices.size()) {
-            if (displayIndex == selectedIndex) {
-                lcd.print("> " + devices[displayIndex] + "   ");
-            } else {
-                lcd.print("  " + devices[displayIndex] + "   ");
+        for (int i = 0; i < 3; i++)
+        {
+            int displayIndex = scrollOffset + i;
+            lcd.setCursor(0, i + 1);
+            if (displayIndex < deviceList.size())
+            {
+                if (displayIndex == selectedIndex)
+                {
+                    lcd.print("> " + deviceList[displayIndex].name + "   ");
+                }
+                else
+                {
+                    lcd.print("  " + deviceList[displayIndex].name + "   ");
+                }
             }
-        } else {
-            lcd.print("                     ");
+            else
+            {
+                lcd.print("                     ");
+            }
         }
     }
 
@@ -127,8 +143,8 @@ void showDeviceList(const std::vector<String>& devices, int selectedIndex, int s
     lastScroll = scrollOffset;
 }
 
-
-void showDeleteConfirmation(const String& deviceName, int index) {
+void showDeleteConfirmation(const String &deviceName, int index)
+{
     lcd.setCursor(0, 1);
     lcd.print("Deleted: " + deviceName + "   ");
     lcd.setCursor(0, 2);
