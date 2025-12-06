@@ -16,12 +16,11 @@ int checkpoint = 0;
 String lastName = "";
 int lastIndex = 0;
 
-// Đây là biến trước khi xóa 
+// Đây là biến trước khi xóa
 int selectedIndexDelete = 0;
 bool checkpointConvert = true;
 
 static int scrollOffset = 0;
-
 
 void reset()
 {
@@ -37,12 +36,13 @@ void reset()
 
 void button(int nextState)
 {
-    if(digitalRead(RE_pinSW) == LOW)
+    if (digitalRead(RE_pinSW) == LOW)
     {
-       while(digitalRead(RE_pinSW) == LOW);
-       state = nextState;
-       encoderCount = 0;
-       checkpoint = 0;
+        while (digitalRead(RE_pinSW) == LOW)
+            ;
+        state = nextState;
+        encoderCount = 0;
+        checkpoint = 0;
     }
 }
 
@@ -68,8 +68,6 @@ void setup()
     initMQTT();
     initEspNow();
 }
-
-
 
 void loop()
 {
@@ -105,6 +103,9 @@ void loop()
         if (checkpoint == 0)
         {
             lcd.clear();
+            lastSel = -1;
+            lastScroll = -1;
+            checkpointConvert = false;
             checkpoint = 1;
         }
         if (receivedName != "" && receivedName != lastName)
@@ -124,7 +125,8 @@ void loop()
         int data = digitalRead(RE_pinSW);
         if (data == LOW)
         {
-            while(digitalRead(RE_pinSW) == LOW);
+            while (digitalRead(RE_pinSW) == LOW)
+                ;
             Serial.println("[STATE_1] Button Pressed at index: " + String(lastIndex));
             if (lastIndex == 2)
             {
@@ -146,41 +148,50 @@ void loop()
         {
             lcd.clear();
             checkpoint = 1;
+
+            lastSel = -1;
+            lastScroll = -1;
+            checkpointConvert = false;
         }
-      
+        // Serial.println("[STATE_2] Showing Device List");
         handleScroll(lastIndex, scrollOffset, deviceList.size());
         showDeviceList(lastIndex, scrollOffset, checkpointConvert);
         selectedIndexDelete = lastIndex;
         button(3);
     }
-    else if(state == 3)
+    else if (state == 3)
     {
-        if(checkpoint == 0)
+        if (checkpoint == 0)
         {
             lcd.clear();
             checkpoint = 1;
         }
 
-        int index =  getEncoderValue(0, 1);
-        if(index != -999 && index != lastIndex)
+        int index = getEncoderValue(0, 1);
+        if (index != -999 && index != lastIndex)
         {
             lastIndex = index;
-        } 
+        }
 
         showDeleteConfirmation(deviceList[selectedIndexDelete].name, lastIndex);
 
         int data = digitalRead(RE_pinSW);
         if (data == LOW)
         {
-            while(digitalRead(RE_pinSW) == LOW);
+            while (digitalRead(RE_pinSW) == LOW)
+                ;
             Serial.println("[STATE_3] Button Pressed at index: " + String(lastIndex));
             if (lastIndex == 1)
             {
                 deviceList.erase(deviceList.begin() + selectedIndexDelete);
                 state = 2;
-                lastIndex = selectedIndexDelete;
                 checkpoint = 0;
                 checkpointConvert = false;
+                selectedIndexDelete = 0;
+                lastIndex = 0;
+                scrollOffset = 0;
+                lastSel = -1;
+                lastScroll = -1;
             }
             else
             {

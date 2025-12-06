@@ -35,18 +35,18 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
             return;
         }
 
-        String uuid = doc["uuid"] | "";
+        String id = doc["id"] | "";
         String name = doc["name"] | "";
 
-        if (uuid == "" || name == "")
+        if (id == "" || name == "")
         {
             Serial.println("[DEVICE] Device Not Found / Invalid");
             return;
         }
 
-        saveUUID(uuid);
-        saveName(name);
-        Serial.println("[DEVICE] Saved -> UUID: " + uuid + " | NAME: " + name);
+        saveDevice(id, name);
+        Serial.println("[Device] Count: " + String(deviceList.size()));
+        Serial.println("[DEVICE] Saved -> UUID: " + id + " | NAME: " + name);
     }
     else
     {

@@ -8,6 +8,11 @@ extern LiquidCrystal_I2C lcd;
 
 void initLCD();
 void showWelcome();
-void showDeviceList(int selectedIndex, int scrollOffset, bool &checkpointConvert);
+void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConvert);
 void showDeleteConfirmation(const String& deviceName, int index);
 void showUser(String name, int index);
+
+
+extern int lastSel;
+extern int lastScroll;
+

@@ -10,9 +10,7 @@ struct DeviceItem {
 
 extern std::vector<DeviceItem> deviceList;
 
-void saveUUID(const String &uuid);
-
-void saveName(const String &name);
+void saveDevice(const String &uuid, const String &nameInput);
 
 
 

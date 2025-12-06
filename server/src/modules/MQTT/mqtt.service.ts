@@ -79,6 +79,11 @@ export class MqttService implements OnModuleInit {
           console.log('[MQTT] Recieve device check request:', deviceId);
           try {
             const device = await this.deviceService.getDeviceAvaiable(deviceId);
+            console.log('[MQTT] Device found:', device);
+            if (device) {
+              device.name = removeAccent(device.name);
+            }
+            console.log('[MQTT] Sending device response:', device);
             this.client.publish(deviceResponse, JSON.stringify(device));
           } catch (err) {
             this.client.publish(deviceResponse, 'NOT_FOUND');
