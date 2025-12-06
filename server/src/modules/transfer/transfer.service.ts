@@ -8,16 +8,14 @@ import {
   User,
   ActivityAction,
   ActivityTargetType,
+  TransferStatus,
 } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { CreateLogInput } from '../activity/interfaces';
-import {
-  DEVICE_MESSAGES,
-  LOAN_MESSAGES,
-  TRANSFER_MESSAGES,
-} from '../../shared/constants';
+import { LOAN_MESSAGES, TRANSFER_MESSAGES } from '../../shared/constants';
 import { GetTransferRequestsDto } from './dto/getTransferRequest.dto';
 import { CreateTransferDto } from './dto/createTransfer.dto';
+import { UpdateTransferDto } from './dto/updateTransfer.dto';
 
 type TransferWithRelations = Transfer & {
   loan: (Loan & { device: Device | null }) | null;
@@ -187,6 +185,116 @@ export class TransferService {
       status: TRANSFER_MESSAGES.TRANSFER_CREATE_SUCCESS.status,
       success: true,
       message: TRANSFER_MESSAGES.TRANSFER_CREATE_SUCCESS.message,
+      data: this.sanitize(result),
+    };
+  }
+
+  async updateTransfer(transferId: string, dto: UpdateTransferDto, actorId: string) {
+    const transfer = await this.prisma.transfer.findUnique({
+      where: { id: transferId },
+      include: {
+        loan: { include: { device: true } },
+        fromUser: true,
+        toUser: true,
+      },
+    });
+
+    if (!transfer) {
+      throwAppError('TRANSFER_NOT_FOUND', TRANSFER_MESSAGES.TRANSFER_NOT_FOUND);
+    }
+    if (transfer.status !== TransferStatus.PENDING) {
+      throwAppError(
+        'TRANSFER_ALREADY_RESOLVED',
+        TRANSFER_MESSAGES.TRANSFER_ALREADY_RESOLVED,
+      );
+    }
+
+    // role (owner/requester) and permission check
+    const isOwner = transfer.fromUserId === actorId;
+    const isRequester = transfer.toUserId === actorId;
+    if (!isOwner && !isRequester) {
+      throwAppError(
+        'TRANSFER_FORBIDDEN_ACTION',
+        TRANSFER_MESSAGES.TRANSFER_FORBIDDEN_ACTION,
+      );
+    }
+    // Only requester can cancel
+    if (isRequester && dto.status !== TransferStatus.CANCELED) {
+      throwAppError(
+        'TRANSFER_FORBIDDEN_ACTION',
+        TRANSFER_MESSAGES.TRANSFER_FORBIDDEN_ACTION,
+      );
+    }
+    // Only owner can approve/reject
+    if (isOwner && dto.status === TransferStatus.CANCELED) {
+      throwAppError(
+        'TRANSFER_FORBIDDEN_ACTION',
+        TRANSFER_MESSAGES.TRANSFER_FORBIDDEN_ACTION,
+      );
+    }
+
+    const result = await this.prisma.$transaction(async (tx) => {
+      const updatedTransfer = tx.transfer.update({
+        where: { id: transferId },
+        data: {
+          status: dto.status,
+        },
+        include: {
+          loan: { include: { device: true } },
+          fromUser: true,
+          toUser: true,
+        },
+      });
+
+      let actionType: ActivityAction;
+      let logDetails: any = {};
+
+      if (dto.status === TransferStatus.APPROVED) {
+        actionType = ActivityAction.TRANSFER_APPROVE;
+        await tx.loan.update({
+          where: { id: transfer.loanId },
+          data: { borrowerId: transfer.toUserId },
+        });
+        logDetails = {
+          type: 'FLOW',
+          deviceName: transfer.loan.device.name,
+          userName: transfer.fromUser.name,
+        };
+      } else if (dto.status === TransferStatus.REJECTED) {
+        actionType = ActivityAction.TRANSFER_REJECT;
+        logDetails = {
+          type: 'FLOW',
+          deviceName: transfer.loan.device.name,
+          userName: transfer.fromUser.name,
+        };
+      } else {
+        actionType = ActivityAction.TRANSFER_CANCEL;
+        logDetails = {
+          type: 'FLOW',
+          deviceName: transfer.loan.device.name,
+          userName: transfer.toUser.name,
+        };
+      }
+
+      const logData: CreateLogInput = {
+        actorId: actorId,
+        action: actionType,
+        targetType: ActivityTargetType.Transfer,
+        targetId: transfer.id,
+        details: logDetails as any,
+      };
+
+      await tx.activityLog.create({ data: logData as any });
+
+      return updatedTransfer;
+    }, {
+      timeout: 20000,
+    });
+
+    return {
+      status: TRANSFER_MESSAGES.TRANSFER_UPDATE_SUCCESS.status,
+      success: true,
+      message: TRANSFER_MESSAGES.TRANSFER_UPDATE_SUCCESS.message,
       data: this.sanitize(result),
     };
   }

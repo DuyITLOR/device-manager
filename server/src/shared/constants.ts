@@ -112,8 +112,24 @@ export const TRANSFER_MESSAGES = {
     status: 201,
     message: 'Tạo yêu cầu chuyển quyền thiết bị thành công',
   },
+  TRANSFER_UPDATE_SUCCESS: {
+    status: 200,
+    message: 'Cập nhật yêu cầu chuyển quyền thiết bị thành công',
+  },
   TRANSFER_SELF_TO_SELF: {
     status: 400,
     message: 'Không thể yêu cầu chuyển thiết bị mình đang mượn cho chính mình',
-  }
+  },
+  TRANSFER_NOT_FOUND: {
+    status: 404,
+    message: 'Yêu cầu chuyển quyền thiết bị không tồn tại',
+  },
+  TRANSFER_ALREADY_RESOLVED: {
+    status: 400,
+    message: 'Yêu cầu chuyển quyền thiết bị đã được xử lý/ bị hủy',
+  },
+  TRANSFER_FORBIDDEN_ACTION: {
+    status: 403,
+    message: 'Không được thực hiện hành động này trên yêu cầu chuyển quyền thiết bị',
+  },
 };

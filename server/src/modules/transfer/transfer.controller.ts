@@ -12,6 +12,7 @@ import { CurrentUser, Roles } from '../../common/decorators';
 import { Role, ROLES } from '../../shared/constants';
 import { GetTransferRequestsDto } from './dto/getTransferRequest.dto';
 import { CreateTransferDto } from './dto/createTransfer.dto';
+import { UpdateTransferDto } from './dto/updateTransfer.dto';
 
 @Controller('transfer')
 export class TransferController {
@@ -29,5 +30,15 @@ export class TransferController {
     @CurrentUser() me: { id: string; role: Role },
   ) {
     return this.transferService.createTransfer(dto, me.id);
+  }
+
+  @Roles(ROLES.MANAGER, ROLES.USER)
+  @Patch(':transferId/update')
+  async updateTransfer(
+    @Body() dto: UpdateTransferDto,
+    @CurrentUser() me: { id: string; role: Role },
+		@Param('transferId') transferId: string,
+  ) {
+    return this.transferService.updateTransfer(transferId, dto, me.id);
   }
 }
