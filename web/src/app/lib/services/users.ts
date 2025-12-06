@@ -150,3 +150,31 @@ export async function changePassword(payload: ChangePassworđDto): Promise<Chang
     throw err;
   }
 }
+
+export async function resetUserPassword(userId: string): Promise<ChangePasswordResponse> {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE_URL}/api/users/${userId}/reset`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      const msg = json?.message ?? json?.error ?? 'Reset mật khẩu thất bại';
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = json;
+      throw err;
+    }
+    return json as ChangePasswordResponse;
+  } catch (e: any) {
+    const msg = e?.message ?? 'Lỗi khi kết nối đến server';
+    const err: any = new Error(msg);
+    err.status = e?.status ?? (e instanceof TypeError ? 0 : 500);
+    err.data = e?.data ?? null;
+    throw err;
+  }
+}
