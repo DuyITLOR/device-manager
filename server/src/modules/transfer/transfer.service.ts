@@ -131,7 +131,7 @@ export class TransferService {
   async createTransfer(dto: CreateTransferDto, requesterId: string) {
     const { loanId } = dto;
     const loan = await this.prisma.loan.findUnique({
-      where: { id: loanId, status: 'BORROWED' },
+      where: { id: loanId },
       include: {
         device: true,
         borrower: true,
