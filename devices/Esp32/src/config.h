@@ -30,3 +30,5 @@ extern const char* TOPIC_DEVICE_RESULT;
 
 extern int mode;
 extern int state;
+extern bool checkpointConvert;
+extern int lastDeviceCount;

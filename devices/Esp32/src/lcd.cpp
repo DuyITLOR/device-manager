@@ -4,8 +4,8 @@
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-static int lastSel = -1;
-static int lastScroll = -1;
+int lastSel = -1;
+int lastScroll = -1;
 
 byte arrowRight[] = {
     B00000,
@@ -90,52 +90,60 @@ void showUser(String name, int index = 0)
     lcd.print("EXIT");
 }
 
-void showDeviceList(int selectedIndex, int scrollOffset, bool &checkpointConvert)
+void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConvert)
 {
+    if (deviceList.size() != lastDeviceCount)
+    {
+        lastSel = -1;
+        lastScroll = -1;
+        scrollOffset = 0;
+        checkpointConvert = false;
+        lastDeviceCount = deviceList.size();
+    }
+
     if (selectedIndex == lastSel && scrollOffset == lastScroll && checkpointConvert)
         return;
 
     if (!checkpointConvert)
         checkpointConvert = true;
+
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.write(1);
     lcd.setCursor(1, 0);
     lcd.print("Devices: " + String(deviceList.size()));
 
+    lcd.setCursor(19, 0);
+    if (mode == 1)
+        lcd.write(0);
+    else if (mode == 2)
+        lcd.write(2);
+
     if (deviceList.size() == 0)
     {
-        lcd.setCursor(0, 2);
-        lcd.print("No deviceList Found");
+        lcd.setCursor(0, 1);
+        lcd.print("NotFound");
         return;
     }
-    else
-    {
-        lcd.setCursor(19, 0);
-        if (mode == 1)
-            lcd.write(0);
-        else if (mode == 2)
-            lcd.write(2);
 
-        for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
+    {
+        int displayIndex = scrollOffset + i;
+        lcd.setCursor(0, i + 1);
+        if (displayIndex < deviceList.size())
         {
-            int displayIndex = scrollOffset + i;
-            lcd.setCursor(0, i + 1);
-            if (displayIndex < deviceList.size())
+            if (displayIndex == selectedIndex)
             {
-                if (displayIndex == selectedIndex)
-                {
-                    lcd.print("> " + deviceList[displayIndex].name + "   ");
-                }
-                else
-                {
-                    lcd.print("  " + deviceList[displayIndex].name + "   ");
-                }
+                lcd.print("> " + deviceList[displayIndex].name + "   ");
             }
             else
             {
-                lcd.print("                     ");
+                lcd.print("  " + deviceList[displayIndex].name + "   ");
             }
+        }
+        else
+        {
+            lcd.print("                     ");
         }
     }
 
