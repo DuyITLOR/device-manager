@@ -3,23 +3,23 @@
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Search, Plus, QrCode, Loader2, User, Delete } from 'lucide-react';
+import { Plus, QrCode, Delete } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { getRole, requireAuthAndRole } from '@/lib/utils/auth';
-import AdminNavigation from '@/components/layout/admin-navigation';
-import AdminHeader from '@/components/layout/admin-header';
+import { getRole } from '@/lib/utils/auth';
 import DeviceTable from '@/components/device/device-table';
 import { Device, DeviceParams, DeviceStatus } from '@/lib/types/device';
-import { deleteDevice, fetchAllDevices } from '@/lib/services/devices';
+import { deleteDevice, fetchAllDevices, fetchDeviceById } from '@/lib/services/devices';
 import { Loading } from '@/components/ui/loading';
 import PaginationComponent from '@/components/ui/pagination-component';
 import DeviceFilterForm from '@/components/device/device-filter-form';
-import { set, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import CreateDeviceDialog from '@/components/device/create-device-dialog';
 import EditDeviceDialog from '@/components/device/edit-device-dialog';
 import { exportQrPdf } from '@/lib/services/qr';
+import { QRScannerDialog } from '@/components/device/qr-scanner-dialog';
+import { DeviceDetailDialog } from '@/components/device/device-detail-dialog';
 
 interface FilterFormData {
   name: string;
@@ -31,11 +31,14 @@ const DeviceManagementPage = () => {
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
-  // const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
+
+  // QR Scanner & Device Detail states
+  const [scannedDevice, setScannedDevice] = useState<Device | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [loadingDeviceDetail, setLoadingDeviceDetail] = useState(false);
 
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -118,6 +121,50 @@ const DeviceManagementPage = () => {
     setSelectedDevices([]);
   };
 
+  // Smooth UX flow: Scan QR -> Camera closes -> 1 second delay -> Show device detail
+  const handleQRScanSuccess = async (deviceId: string) => {
+    try {
+      const device = await fetchDeviceById(deviceId);
+
+      setTimeout(() => {
+        setScannedDevice(device);
+        setDetailDialogOpen(true);
+      }, 1000);
+
+      console.log('Scanned device:', device);
+
+      toast({
+        title: 'Đã quét thành công',
+        description: 'Đang tải thông tin thiết bị...',
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Không tìm thấy thiết bị',
+        description: err.message || 'Mã QR không hợp lệ hoặc thiết bị không tồn tại',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleRowClick = async (device: Device) => {
+    if (loadingDeviceDetail) return;
+
+    try {
+      setLoadingDeviceDetail(true);
+      const detail = await fetchDeviceById(device.id);
+      setScannedDevice(detail);
+      setDetailDialogOpen(true);
+    } catch (err: any) {
+      toast({
+        title: 'Lỗi',
+        description: err.message || 'Không thể tải thông tin thiết bị',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingDeviceDetail(false);
+    }
+  };
+
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
@@ -182,6 +229,9 @@ const DeviceManagementPage = () => {
                   <CardDescription className='mt-1'>Thêm, chỉnh sửa và quản lý tất cả thiết bị</CardDescription>
                 </div>
                 <div className='flex flex-col md:flex-row gap-2'>
+                  {/* QR Scanner Button - Always visible */}
+                  <QRScannerDialog onScanSuccess={handleQRScanSuccess} />
+
                   {isExporting ? (
                     <Button variant='outline' onClick={handleChangeMode} className='glass-button'>
                       <QrCode />
@@ -214,6 +264,10 @@ const DeviceManagementPage = () => {
                   <CardTitle className='text-2xl'>Tất cả thiết bị</CardTitle>
                   <CardDescription className='mt-1'>Tìm kiếm các thiết bị có sẵn trong hệ thống</CardDescription>
                 </div>
+                <div className='flex gap-2'>
+                  {/* QR Scanner Button for regular users */}
+                  <QRScannerDialog onScanSuccess={handleQRScanSuccess} />
+                </div>
               </div>
             )}
 
@@ -238,10 +292,12 @@ const DeviceManagementPage = () => {
                   setEditingDevice(device);
                   setEditDialogOpen(true);
                 }}
+                onRowClick={handleRowClick}
                 selectTable={!isExporting}
                 selectIds={selectedDevices}
                 onToggleSelect={handleToggleSelect}
                 hasManagement={hasManagement}
+                loadingRow={loadingDeviceDetail}
               />
               <PaginationComponent currentPage={curPage} totalPages={totalPages} onPageChange={handlePageChange} />
             </CardContent>
@@ -266,6 +322,9 @@ const DeviceManagementPage = () => {
             loadDevices();
           }}
         />
+
+        {/* Device Detail Dialog - Shows after QR scan */}
+        <DeviceDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} device={scannedDevice} />
       </div>
     </div>
   );

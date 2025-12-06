@@ -117,3 +117,29 @@ export async function updateDevice(id: string, dto: Partial<CreateDevicesDto>) {
     throw err;
   }
 }
+
+export async function fetchDeviceById(id: string): Promise<Device> {
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE_URL}/api/devices/${id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    });
+    const json = await res.json();
+    console.log('fetchDeviceById', json);
+    if (!res.ok) {
+      const msg = json?.message ?? json?.error ?? 'Lỗi khi tải thiết bị';
+      const err: any = new Error(msg);
+      err.status = res.status;
+      err.data = json;
+      throw err;
+    }
+    return json.data as Device;
+  } catch (e: any) {
+    const msg = e?.message ?? 'Lỗi khi kết nối đến server';
+    const err: any = new Error(msg);
+    err.status = e?.status ?? (e instanceof TypeError ? 0 : 500);
+    err.data = e?.data ?? null;
+    throw err;
+  }
+}

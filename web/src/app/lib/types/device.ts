@@ -11,6 +11,7 @@ export type Device = {
   name: string;
   description: string;
   status: DeviceStatus;
+  borrowerName?: string;
   createdAt?: string;
 };
 
