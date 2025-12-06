@@ -48,6 +48,7 @@ enum ActivityTargetType {
 enum ActivityAction {
   LOAN_CREATE
   LOAN_RETURN
+  LOAN_UPDATE
   TRANSFER_REQUEST
   TRANSFER_APPROVE
   TRANSFER_REJECT
