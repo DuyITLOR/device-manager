@@ -102,3 +102,10 @@ export const LOAN_MESSAGES = {
     message: 'Record mượn thiết bị không tồn tại',
   },
 };
+
+export const TRANSFER_MESSAGES = {
+  TRANFER_REQUESTS_FETCH_SUCCESS: {
+    status: 200,
+    message: 'Lấy các yêu cầu chuyển thiết bị thành công',
+  },
+};
