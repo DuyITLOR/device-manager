@@ -23,6 +23,10 @@ extern const int RE_pinSW;
 extern const char* TOPIC_RFID_SEND;
 extern const char* TOPIC_NAME_RECV;
 
+extern const char* TOPIC_DEVICE_CHECK;
+extern const char* TOPIC_DEVICE_RESULT;
+
+
 
 extern int mode;
 extern int state;

@@ -258,7 +258,7 @@ export class LoanService {
 
   async updateLoan(dto: UpdateLoanDto, actorId: string) {
     const existingLoan = await this.prisma.loan.findUnique({
-      where: { id: dto.loanId, status: "BORROWED" },
+      where: { id: dto.loanId, status: 'BORROWED' },
       include: {
         borrower: true,
         device: true,
@@ -271,13 +271,13 @@ export class LoanService {
 
     let actionType: ActivityAction = ActivityAction.LOAN_RETURN;
     let logDetails: any = {};
-    let {loanId, ...updatedData} = dto
-    let loanUpdateData: Prisma.LoanUpdateInput = {...updatedData};
+    let { loanId, ...updatedData } = dto;
+    let loanUpdateData: Prisma.LoanUpdateInput = { ...updatedData };
     let deviceUpdateData: any = undefined;
 
     // Case 1: Return Operation
     if (dto.status === 'RETURNED' && existingLoan.status === 'BORROWED') {
-      console.log("Return operation detected");
+      console.log('Return operation detected');
       loanUpdateData.returnedAt = new Date();
 
       deviceUpdateData = {
@@ -292,7 +292,7 @@ export class LoanService {
     }
     // Case 2: Transfer Operation
     else if (dto.borrowerId && dto.borrowerId !== existingLoan.borrowerId) {
-      console.log("Transfer operation detected");
+      console.log('Transfer operation detected');
       const newBorrower = await this.prisma.user.findUnique({
         where: { id: dto.borrowerId },
       });
@@ -310,7 +310,7 @@ export class LoanService {
     }
     // Case 3: Update Notes in the Loan record
     else {
-      console.log("Normal update operation detected");
+      console.log('Normal update operation detected');
       const diff = generateDiff(existingLoan, dto);
       actionType = ActivityAction.LOAN_UPDATE;
       logDetails = {
@@ -319,55 +319,58 @@ export class LoanService {
       };
     }
 
-    const updatedLoan = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.loan.update({
-        where: { id: dto.loanId },
-        data: loanUpdateData,
-        include: {
-          borrower: true,
-          device: true,
-        },
-      });
-
-      // device update, case 1: return operation
-      if (deviceUpdateData) {
-        await tx.device.update({
-          where: { id: existingLoan.deviceId },
-          data: deviceUpdateData,
-        });
-        // log for device update
-        await tx.activityLog.create({
-          data: {
-            actorId: actorId,
-            action: ActivityAction.DEVICE_UPDATE,
-            targetType: ActivityTargetType.Device,
-            targetId: existingLoan.deviceId,
-            details: logDetails,
+    const updatedLoan = await this.prisma.$transaction(
+      async (tx) => {
+        const updated = await tx.loan.update({
+          where: { id: dto.loanId },
+          data: loanUpdateData,
+          include: {
+            borrower: true,
+            device: true,
           },
         });
-      }
 
-      // log for loan update
-      if (
-        actionType === ActivityAction.LOAN_RETURN ||
-        actionType === ActivityAction.TRANSFER_APPROVE ||
-        logDetails.diff && Object.keys(logDetails.diff).length > 0
-      ) {
-        await tx.activityLog.create({
-          data: {
-            actorId: actorId,
-            action: actionType,
-            targetType: ActivityTargetType.Loan,
-            targetId: dto.loanId,
-            details: logDetails,
-          },
-        });
-      }
-      return updated;
-    }, {
-      maxWait: 5000,
-      timeout: 20000,
-    });
+        // device update, case 1: return operation
+        if (deviceUpdateData) {
+          await tx.device.update({
+            where: { id: existingLoan.deviceId },
+            data: deviceUpdateData,
+          });
+          // log for device update
+          await tx.activityLog.create({
+            data: {
+              actorId: actorId,
+              action: ActivityAction.DEVICE_UPDATE,
+              targetType: ActivityTargetType.Device,
+              targetId: existingLoan.deviceId,
+              details: logDetails,
+            },
+          });
+        }
+
+        // log for loan update
+        if (
+          actionType === ActivityAction.LOAN_RETURN ||
+          actionType === ActivityAction.TRANSFER_APPROVE ||
+          (logDetails.diff && Object.keys(logDetails.diff).length > 0)
+        ) {
+          await tx.activityLog.create({
+            data: {
+              actorId: actorId,
+              action: actionType,
+              targetType: ActivityTargetType.Loan,
+              targetId: dto.loanId,
+              details: logDetails,
+            },
+          });
+        }
+        return updated;
+      },
+      {
+        maxWait: 5000,
+        timeout: 20000,
+      },
+    );
 
     return {
       status: LOAN_MESSAGES.LOAN_UPDATE_SUCCESS.status,
