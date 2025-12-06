@@ -12,20 +12,24 @@ interface DeviceTableProps {
   devices: Device[];
   onDelete?: (deviceId: string) => void;
   onEdit?: (device: Device) => void;
+  onRowClick?: (device: Device) => void;
 
   selectTable?: boolean;
   selectIds?: string[];
   onToggleSelect?: (deviceId: string) => void;
   hasManagement?: boolean;
+  loadingRow?: boolean;
 }
 export default function DeviceTable({
   devices,
   onDelete,
   onEdit,
+  onRowClick,
   selectTable,
   selectIds,
   onToggleSelect,
   hasManagement,
+  loadingRow,
 }: DeviceTableProps) {
   return (
     <div className='rounded-lg border overflow-hidden'>
@@ -41,9 +45,13 @@ export default function DeviceTable({
         </TableHeader>
         <TableBody>
           {devices.map((device) => (
-            <TableRow key={device.id}>
+            <TableRow
+              key={device.id}
+              className={`cursor-pointer hover:bg-muted/50 ${loadingRow ? 'opacity-50 pointer-events-none' : ''}`}
+              onClick={() => onRowClick?.(device)}
+            >
               {selectTable && (
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <Checkbox
                     checked={selectIds?.includes(device.id) || false}
                     onCheckedChange={() => onToggleSelect?.(device.id)}
@@ -56,7 +64,7 @@ export default function DeviceTable({
                 <Badge variant={DEVICE_STATUS_VARIANTS[device.status]}>{DEVICE_STATUS_MAP[device.status]}</Badge>
               </TableCell>
               {hasManagement && (
-                <TableCell className='text-right'>
+                <TableCell className='text-right' onClick={(e) => e.stopPropagation()}>
                   <div className='flex justify-end gap-2'>
                     <Button size='sm' variant='ghost' onClick={() => onEdit?.(device)}>
                       <Edit className='w-4 h-4' />

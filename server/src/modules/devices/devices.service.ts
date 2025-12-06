@@ -73,6 +73,26 @@ export class DevicesService {
   async findOne(id: string) {
     const device = await this.findById(id);
 
+    if (device.status === 'BORROWED') {
+      const borrower = await this.prisma.loan.findFirst({
+        where: {
+          deviceId: device.id,
+        },
+        include: {
+          borrower: true,
+        },
+      });
+      return {
+        status: DEVICE_MESSAGES.DEVICE_QUERY_SUCCESS.status,
+        success: true,
+        message: DEVICE_MESSAGES.DEVICE_QUERY_SUCCESS.message,
+        data: {
+          ...device,
+          borrowerName: borrower?.borrower.name,
+        },
+      };
+    }
+
     return {
       status: DEVICE_MESSAGES.DEVICE_QUERY_SUCCESS.status,
       success: true,
