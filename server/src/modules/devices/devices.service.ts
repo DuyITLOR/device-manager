@@ -209,4 +209,17 @@ export class DevicesService {
       data: updated,
     };
   }
+
+  async getDeviceAvaiable(deviceId: string) {
+    const device = await this.prisma.device.findUnique({
+      where: { id: deviceId, status: 'AVAILABLE' },
+    });
+
+    if (!device || device.status !== 'AVAILABLE') return null;
+
+    return {
+      id: device.id,
+      name: device.name,
+    };
+  }
 }

@@ -17,8 +17,8 @@ export default () => ({
       rfidcode: process.env.MQTT_RFID_TOPIC,
       nameRespone: process.env.MQTT_NAME_TOPIC,
 
-      requestStatus: process.env.MQTT_CHECK_REQUEST_AVAIABLE,
-      responseStatus: process.env.MQTT_CHECK_RESPONSE_AVAIABLE,
+      deviceRequest: process.env.MQTT_DEVICE_REQUEST,
+      deviceResponse: process.env.MQTT_DEVICE_RESPONSE,
     },
   },
 });

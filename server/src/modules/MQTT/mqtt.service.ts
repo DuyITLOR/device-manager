@@ -3,6 +3,7 @@ import { MqttClient, connect } from 'mqtt';
 import { UsersService } from '../users/users.service';
 import removeAccent from '../../shared/removeAccent';
 import { ConfigService } from '@nestjs/config';
+import { DevicesService } from '../devices/devices.service';
 
 @Injectable()
 export class MqttService implements OnModuleInit {
@@ -11,6 +12,7 @@ export class MqttService implements OnModuleInit {
   constructor(
     private readonly userService: UsersService,
     private readonly config: ConfigService,
+    private readonly deviceService: DevicesService,
   ) {}
 
   onModuleInit() {
@@ -21,9 +23,18 @@ export class MqttService implements OnModuleInit {
     const rfidcode = this.config.get<string>('mqtt.topic.rfidcode');
     const nameRespone = this.config.get<string>('mqtt.topic.nameRespone');
 
+    const deviceRequest = this.config.get<string>('mqtt.topic.deviceRequest');
+    const deviceResponse = this.config.get<string>('mqtt.topic.deviceResponse');
+
     // const requestStatus = this.config.get<string>('mqtt.topic.requestStatus');
     // const responseStatus = this.config.get<string>('mqtt.topic.responseStatus');
-    if (!host || !rfidcode || !nameRespone) {
+    if (
+      !host ||
+      !rfidcode ||
+      !nameRespone ||
+      !deviceRequest ||
+      !deviceResponse
+    ) {
       throw new Error('[MQTT] Missing MQTT configuration!');
     }
 
@@ -39,6 +50,11 @@ export class MqttService implements OnModuleInit {
       this.client.subscribe(rfidcode, (err: Error | null) => {
         if (err) console.error('Subscribe error:', err);
         else console.log('[MQTT] Subscribed to rfid/esp32/code');
+      });
+
+      this.client.subscribe(deviceRequest, (err: Error | null) => {
+        if (err) console.error('Subscribe error:', err);
+        else console.log('[MQTT] Subscribed to device/check');
       });
     });
 
@@ -57,6 +73,16 @@ export class MqttService implements OnModuleInit {
           } catch (err) {
             this.client.publish(nameRespone || '', 'NOT_FOUND');
             console.error('[MQTT] User not found', err);
+          }
+        } else if (topic == deviceRequest) {
+          const deviceId = payload.toString().trim();
+          console.log('[MQTT] Recieve device check request:', deviceId);
+          try {
+            const device = await this.deviceService.getDeviceAvaiable(deviceId);
+            this.client.publish(deviceResponse, JSON.stringify(device));
+          } catch (err) {
+            this.client.publish(deviceResponse, 'NOT_FOUND');
+            console.error('[MQTT] Device not found', err);
           }
         }
       })().catch((err) => {
