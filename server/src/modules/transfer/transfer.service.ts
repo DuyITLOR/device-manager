@@ -148,6 +148,20 @@ export class TransferService {
       );
     }
 
+    const existingRequest = await this.prisma.transfer.findFirst({
+      where: {
+        loanId: dto.loanId,
+        toUserId: requesterId, // Use 'toUserId' because in your logic, Requester = toUser
+        status: TransferStatus.PENDING, // Only check active requests
+      },
+    });
+    if (existingRequest) {
+      throwAppError(
+        'TRANSFER_REQUEST_EXISTS',
+        TRANSFER_MESSAGES.TRANSFER_REQUEST_EXISTS,
+      );
+    }
+
     const result = await this.prisma.$transaction(async (tx) => {
       const transfer = await tx.transfer.create({
         data: {
@@ -189,7 +203,11 @@ export class TransferService {
     };
   }
 
-  async updateTransfer(transferId: string, dto: UpdateTransferDto, actorId: string) {
+  async updateTransfer(
+    transferId: string,
+    dto: UpdateTransferDto,
+    actorId: string,
+  ) {
     const transfer = await this.prisma.transfer.findUnique({
       where: { id: transferId },
       include: {
@@ -233,63 +251,66 @@ export class TransferService {
       );
     }
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      const updatedTransfer = tx.transfer.update({
-        where: { id: transferId },
-        data: {
-          status: dto.status,
-        },
-        include: {
-          loan: { include: { device: true } },
-          fromUser: true,
-          toUser: true,
-        },
-      });
-
-      let actionType: ActivityAction;
-      let logDetails: any = {};
-
-      if (dto.status === TransferStatus.APPROVED) {
-        actionType = ActivityAction.TRANSFER_APPROVE;
-        await tx.loan.update({
-          where: { id: transfer.loanId },
-          data: { borrowerId: transfer.toUserId },
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const updatedTransfer = tx.transfer.update({
+          where: { id: transferId },
+          data: {
+            status: dto.status,
+          },
+          include: {
+            loan: { include: { device: true } },
+            fromUser: true,
+            toUser: true,
+          },
         });
-        logDetails = {
-          type: 'FLOW',
-          deviceName: transfer.loan.device.name,
-          userName: transfer.fromUser.name,
-        };
-      } else if (dto.status === TransferStatus.REJECTED) {
-        actionType = ActivityAction.TRANSFER_REJECT;
-        logDetails = {
-          type: 'FLOW',
-          deviceName: transfer.loan.device.name,
-          userName: transfer.fromUser.name,
-        };
-      } else {
-        actionType = ActivityAction.TRANSFER_CANCEL;
-        logDetails = {
-          type: 'FLOW',
-          deviceName: transfer.loan.device.name,
-          userName: transfer.toUser.name,
-        };
-      }
 
-      const logData: CreateLogInput = {
-        actorId: actorId,
-        action: actionType,
-        targetType: ActivityTargetType.Transfer,
-        targetId: transfer.id,
-        details: logDetails as any,
-      };
+        let actionType: ActivityAction;
+        let logDetails: any = {};
 
-      await tx.activityLog.create({ data: logData as any });
+        if (dto.status === TransferStatus.APPROVED) {
+          actionType = ActivityAction.TRANSFER_APPROVE;
+          await tx.loan.update({
+            where: { id: transfer.loanId },
+            data: { borrowerId: transfer.toUserId },
+          });
+          logDetails = {
+            type: 'FLOW',
+            deviceName: transfer.loan.device.name,
+            userName: transfer.fromUser.name,
+          };
+        } else if (dto.status === TransferStatus.REJECTED) {
+          actionType = ActivityAction.TRANSFER_REJECT;
+          logDetails = {
+            type: 'FLOW',
+            deviceName: transfer.loan.device.name,
+            userName: transfer.fromUser.name,
+          };
+        } else {
+          actionType = ActivityAction.TRANSFER_CANCEL;
+          logDetails = {
+            type: 'FLOW',
+            deviceName: transfer.loan.device.name,
+            userName: transfer.toUser.name,
+          };
+        }
 
-      return updatedTransfer;
-    }, {
-      timeout: 20000,
-    });
+        const logData: CreateLogInput = {
+          actorId: actorId,
+          action: actionType,
+          targetType: ActivityTargetType.Transfer,
+          targetId: transfer.id,
+          details: logDetails as any,
+        };
+
+        await tx.activityLog.create({ data: logData as any });
+
+        return updatedTransfer;
+      },
+      {
+        timeout: 20000,
+      },
+    );
 
     return {
       status: TRANSFER_MESSAGES.TRANSFER_UPDATE_SUCCESS.status,

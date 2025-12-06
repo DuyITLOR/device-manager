@@ -132,4 +132,8 @@ export const TRANSFER_MESSAGES = {
     status: 403,
     message: 'Không được thực hiện hành động này trên yêu cầu chuyển quyền thiết bị',
   },
+  TRANSFER_REQUEST_EXISTS: {
+    status: 409,
+    message: 'Yêu cầu chuyển quyền thiết bị đã tồn tại',
+  },
 };
