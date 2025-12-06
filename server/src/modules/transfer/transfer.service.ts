@@ -6,6 +6,8 @@ import {
   Loan,
   Device,
   User,
+  ActivityAction,
+  ActivityTargetType,
 } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
 import { CreateLogInput } from '../activity/interfaces';
@@ -166,13 +168,13 @@ export class TransferService {
 
       const logData: CreateLogInput = {
         actorId: requesterId, // toUserId in the record
-        action: 'TRANSFER_REQUEST',
-        targetType: 'Transfer',
+        action: ActivityAction.TRANSFER_REQUEST,
+        targetType: ActivityTargetType.Transfer,
         targetId: transfer.id,
         details: {
           type: 'FLOW',
           deviceName: loan.device.name,
-          userName: requesterId,
+          userName: transfer.toUser?.name || 'Unknown',
         },
       };
 
