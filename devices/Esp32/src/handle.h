@@ -3,5 +3,7 @@
 
 String getLastTwoWords(String name);
 bool readButton();
-
+int handleScroll(int &selectedIndex, int &scrollOffset, int maxItems);
 void reset();
+
+extern bool isDelete;

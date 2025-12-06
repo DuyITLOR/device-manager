@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <esp_now.h>
 #include <WiFi.h>
+#include <vector>
 
 #include "config.h"
 #include "lcd.h"
@@ -14,6 +15,15 @@ int checkpoint = 0;
 String lastName = "";
 int lastIndex = 0;
 
+// Đây là biến trước khi xóa 
+int selectedIndexDelete = 0;
+bool checkpointConvert = true;
+
+static int scrollOffset = 0;
+
+
+std::vector<String> device = {"Device_A", "Device_B", "Device_C", "Device_D", "Device_E"};
+
 void reset()
 {
     state = 0;
@@ -21,8 +31,20 @@ void reset()
     receivedName = "";
     lastName = "";
     lastIndex = 0;
+    encoderCount = 0;
 
     Serial.println("[STATE_1] Exiting to STATE 0");
+}
+
+void button(int nextState)
+{
+    if(digitalRead(RE_pinSW) == LOW)
+    {
+       while(digitalRead(RE_pinSW) == LOW);
+       state = nextState;
+       encoderCount = 0;
+       checkpoint = 0;
+    }
 }
 
 void setup()
@@ -46,6 +68,8 @@ void setup()
     initRFID();
     initMQTT();
 }
+
+
 
 void loop()
 {
@@ -100,7 +124,7 @@ void loop()
         int data = digitalRead(RE_pinSW);
         if (data == LOW)
         {
-            delay(10);
+            while(digitalRead(RE_pinSW) == LOW);
             Serial.println("[STATE_1] Button Pressed at index: " + String(lastIndex));
             if (lastIndex == 2)
             {
@@ -118,6 +142,53 @@ void loop()
     }
     else if (state == 2)
     {
-        lcd.clear();
+        if (checkpoint == 0)
+        {
+            lcd.clear();
+            checkpoint = 1;
+        }
+      
+        handleScroll(lastIndex, scrollOffset, device.size());
+        showDeviceList(device, lastIndex, scrollOffset, checkpointConvert);
+        selectedIndexDelete = lastIndex;
+        button(3);
+    }
+    else if(state == 3)
+    {
+        if(checkpoint == 0)
+        {
+            lcd.clear();
+            checkpoint = 1;
+        }
+
+        int index =  getEncoderValue(0, 1);
+        if(index != -999 && index != lastIndex)
+        {
+            lastIndex = index;
+        } 
+
+        showDeleteConfirmation(device[selectedIndexDelete], lastIndex);
+
+        int data = digitalRead(RE_pinSW);
+        if (data == LOW)
+        {
+            while(digitalRead(RE_pinSW) == LOW);
+            Serial.println("[STATE_3] Button Pressed at index: " + String(lastIndex));
+            if (lastIndex == 1)
+            {
+                device.erase(device.begin() + selectedIndexDelete);
+                state = 2;
+                lastIndex = selectedIndexDelete;
+                checkpoint = 0;
+                checkpointConvert = false;
+            }
+            else
+            {
+                state = 2;
+                lastIndex = selectedIndexDelete;
+                checkpoint = 0;
+                checkpointConvert = false;
+            }
+        }
     }
 }

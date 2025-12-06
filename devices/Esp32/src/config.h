@@ -25,3 +25,4 @@ extern const char* TOPIC_NAME_RECV;
 
 
 extern int mode;
+extern int state;

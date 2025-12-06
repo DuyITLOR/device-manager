@@ -4,7 +4,10 @@
 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-byte arrow[] = {
+static int lastSel = -1;
+static int lastScroll = -1;
+
+byte arrowRight[] = {
   B00000,
   B00100,
   B00110,
@@ -15,10 +18,35 @@ byte arrow[] = {
   B00000
 };
 
+byte arrowLeft[] = {
+  B00000,
+  B00100,
+  B01100,
+  B11111,
+  B11111,
+  B01100,
+  B00100,
+  B00000
+};
+
+
+byte devices[] = {
+  B00000,
+  B10001,
+  B11011,
+  B11111,
+  B11111,
+  B11111,
+  B11011,
+  B00000
+};
+
 void initLCD() {
     lcd.init();
     lcd.backlight();
-    lcd.createChar(0, arrow);
+    lcd.createChar(0, arrowRight);
+    lcd.createChar(1, devices);
+    lcd.createChar(2, arrowLeft);
 }
 
 void showWelcome() {
@@ -62,10 +90,24 @@ void showUser(String name, int index = 0)
 }
 
 
-void showDeviceList(const std::vector<String>& devices, int selectedIndex, int scrollOffset) {
+void showDeviceList(const std::vector<String>& devices, int selectedIndex, int scrollOffset, bool &checkpointConvert) {
+    if (selectedIndex == lastSel && scrollOffset == lastScroll && checkpointConvert)
+        return;
+
+    if (!checkpointConvert)
+        checkpointConvert = true;
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Devices: " + String(devices.size()));
+    lcd.write(1);
+    lcd.setCursor(1, 0);
+    lcd.print   ("Devices: " + String(devices.size()));
+
+
+    lcd.setCursor(19, 0);
+    if(mode == 1)
+        lcd.write(0);
+    else if(mode == 2)
+        lcd.write(2);
 
     for (int i = 0; i < 3; i++) {
         int displayIndex = scrollOffset + i;
@@ -80,15 +122,17 @@ void showDeviceList(const std::vector<String>& devices, int selectedIndex, int s
             lcd.print("                     ");
         }
     }
+
+    lastSel = selectedIndex;
+    lastScroll = scrollOffset;
 }
 
 
-void showDeleteConfirmation(const String& deviceName, bool confirmDelete) {
-    lcd.clear();
+void showDeleteConfirmation(const String& deviceName, int index) {
     lcd.setCursor(0, 1);
     lcd.print("Deleted: " + deviceName + "   ");
     lcd.setCursor(0, 2);
-    lcd.print(confirmDelete ? "> Yes" : "  Yes");
+    lcd.print(index == 1 ? "> Yes" : "  Yes");
     lcd.setCursor(0, 3);
-    lcd.print(!confirmDelete ? "> No" : "  No");
+    lcd.print(index == 0 ? "> No" : "  No");
 }
