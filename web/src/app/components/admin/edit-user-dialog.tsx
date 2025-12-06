@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { User } from '@/lib/types/user';
-import { updateUser } from '@/lib/services/users';
+import { resetUserPassword, updateUser } from '@/lib/services/users';
 import { useToast } from '@/hooks/use-toast';
 
 interface EditUserDialogProps {
@@ -47,6 +47,26 @@ export default function EditUserDialog({ open, onOpenChange, user, onSuccess }: 
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!user) return;
+    setSaving(true);
+    try {
+      await resetUserPassword(user.id);
+      toast({
+        title: 'Đặt lại mật khẩu thành công',
+        description: 'Mật khẩu đã được đặt lại về 123456',
+        variant: 'success',
+      });
+      onOpenChange(false);
+      onSuccess?.(user);
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi đặt lại mật khẩu';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -81,6 +101,9 @@ export default function EditUserDialog({ open, onOpenChange, user, onSuccess }: 
         <DialogFooter>
           <Button variant='ghost' onClick={() => onOpenChange(false)} disabled={saving}>
             Hủy
+          </Button>
+          <Button onClick={handleResetPassword} disabled={saving} variant={'destructive'}>
+            {saving ? 'Đang đặt lại...' : 'Đặt lại mật khẩu'}
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? 'Đang lưu...' : 'Lưu'}
