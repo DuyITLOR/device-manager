@@ -16,7 +16,6 @@ import {
 } from '../../shared/constants';
 import { GetTransferRequestsDto } from './dto/getTransferRequest.dto';
 import { CreateTransferDto } from './dto/createTransfer.dto';
-import { text } from 'pdfkit';
 
 type TransferWithRelations = Transfer & {
   loan: (Loan & { device: Device | null }) | null;
@@ -50,14 +49,14 @@ export class TransferService {
             name: loan.device.name,
           }
         : null,
-      sender: fromUser
+      userHasDevice: fromUser
         ? {
             id: fromUser.id,
             name: fromUser.name,
             email: fromUser.email,
           }
         : null,
-      receiver: toUser
+      userRequestDevice: toUser
         ? {
             id: toUser.id,
             name: toUser.name,
@@ -130,7 +129,7 @@ export class TransferService {
   }
 
   async createTransfer(dto: CreateTransferDto, requesterId: string) {
-    const { fromUserId, loanId } = dto;
+    const { loanId } = dto;
     const loan = await this.prisma.loan.findUnique({
       where: { id: loanId, status: 'BORROWED' },
       include: {
@@ -153,7 +152,7 @@ export class TransferService {
       const transfer = await tx.transfer.create({
         data: {
           loanId,
-          fromUserId,
+          fromUserId: loan.borrowerId,
           toUserId: requesterId,
           requestedAt: new Date(),
           status: 'PENDING',
@@ -173,7 +172,7 @@ export class TransferService {
         details: {
           type: 'FLOW',
           deviceName: loan.device.name,
-          userName: transfer.fromUser ? transfer.fromUser.name : 'Unknown',
+          userName: requesterId,
         },
       };
 
