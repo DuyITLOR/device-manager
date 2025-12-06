@@ -13,6 +13,6 @@ export const envValidationSchema = Joi.object({
   MQTT_PASSWORD: Joi.string().required(),
   MQTT_RFID_TOPIC: Joi.string().required(),
   MQTT_NAME_TOPIC: Joi.string().required(),
-  MQTT_CHECK_REQUEST_AVAIABLE: Joi.string().required(),
-  MQTT_CHECK_RESPONSE_AVAIABLE: Joi.string().required(),
+  MQTT_DEVICE_REQUEST: Joi.string().required(),
+  MQTT_DEVICE_RESPONSE: Joi.string().required(),
 });
