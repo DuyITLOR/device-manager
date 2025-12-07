@@ -129,14 +129,16 @@ export class TransferService {
   }
 
   async createTransfer(dto: CreateTransferDto, requesterId: string) {
-    const { loanId } = dto;
-    const loan = await this.prisma.loan.findUnique({
-      where: { id: loanId },
+    const { deviceId } = dto;
+    const loan = await this.prisma.loan.findFirst({
+      where: {
+        deviceId,
+        status: 'BORROWED',
+      },
       include: {
         device: true,
-        borrower: true,
       },
-    });
+    })
 
     if (!loan) {
       throwAppError('LOAN_NOT_FOUND', LOAN_MESSAGES.LOAN_NOT_FOUND);
@@ -150,7 +152,7 @@ export class TransferService {
 
     const existingRequest = await this.prisma.transfer.findFirst({
       where: {
-        loanId: dto.loanId,
+        loanId: loan.id,
         toUserId: requesterId, // Use 'toUserId' because in your logic, Requester = toUser
         status: TransferStatus.PENDING, // Only check active requests
       },
@@ -165,7 +167,7 @@ export class TransferService {
     const result = await this.prisma.$transaction(async (tx) => {
       const transfer = await tx.transfer.create({
         data: {
-          loanId,
+          loanId: loan.id,
           fromUserId: loan.borrowerId,
           toUserId: requesterId,
           requestedAt: new Date(),
