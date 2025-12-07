@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/user.module';
 import { DevicesModule } from './modules/devices/devices.module';
 import { LoanModule } from './modules/loan/loan.module';
+import { TransferModule } from './modules/transfer/transfer.module';
 import { MqttModule } from './modules/MQTT/mqtt.module';
 import { QrModule } from './modules/qr/qr.module';
 
@@ -31,6 +32,7 @@ import { HealthModule } from './modules/health/health.module';
     UsersModule,
     DevicesModule,
     LoanModule,
+    TransferModule,
     QrModule,
     HealthModule,
     MqttModule,
