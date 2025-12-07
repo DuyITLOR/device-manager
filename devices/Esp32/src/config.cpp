@@ -1,8 +1,8 @@
 #include "config.h"
 
 // WiFi credentials
-const char *ssid = "THREE O'CLOCK";
-const char *password = "3open24h";
+const char *ssid = "i680";
+const char *password = "RoboticsLab@1!";
 
 // MQTT broker settings
 const char* mqtt_server = "d88f57c7216c42dcb02df9d78d1c49ed.s1.eu.hivemq.cloud";
@@ -26,6 +26,9 @@ const char* TOPIC_NAME_RECV = "rfid/server/name";
 const char* TOPIC_DEVICE_CHECK  = "devices/check";
 const char* TOPIC_DEVICE_RESULT = "devices/result";
 
+const char* TOPIC_DEVICE_LOAN = "devices/loan";
+const char* TOPIC_DEVICE_RETURN = "devices/return";
+const char* TOPIC_DEVICE_RESPONSE = "devices/response";
 
 
 int mode = 0;

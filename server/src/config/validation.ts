@@ -15,4 +15,7 @@ export const envValidationSchema = Joi.object({
   MQTT_NAME_TOPIC: Joi.string().required(),
   MQTT_DEVICE_REQUEST: Joi.string().required(),
   MQTT_DEVICE_RESPONSE: Joi.string().required(),
+  MQTT_DEVICE_LOAN: Joi.string().required(),
+  MQTT_DEVICE_RETURN: Joi.string().required(),
+  MQTT_DEVICE_SUBMIT_RESPONSE: Joi.string().required(),
 });

@@ -19,6 +19,10 @@ export default () => ({
 
       deviceRequest: process.env.MQTT_DEVICE_REQUEST,
       deviceResponse: process.env.MQTT_DEVICE_RESPONSE,
+
+      deviceLoan: process.env.MQTT_DEVICE_LOAN,
+      deviceReturn: process.env.MQTT_DEVICE_RETURN,
+      deviceSubmitResponse: process.env.MQTT_DEVICE_SUBMIT_RESPONSE,
     },
   },
 });

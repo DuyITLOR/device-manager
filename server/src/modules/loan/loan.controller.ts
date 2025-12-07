@@ -1,34 +1,48 @@
-import { Controller, Get, Post, Patch, Param, Body, Query } from "@nestjs/common";
-import { LoanService } from "./loan.service";
-import { QueryLoanDto } from "./dto/queryLoan.dto";
-import { CurrentUser, Roles } from "../../common/decorators";
-import { Role, ROLES } from "../../shared/constants";
-import { CreateLoanDto } from "./dto/createLoan.dto";
-import { UpdateLoanDto } from "./dto/updateLoan.dto";
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
+import { LoanService } from './loan.service';
+import { QueryLoanDto } from './dto/queryLoan.dto';
+import { CurrentUser, Roles } from '../../common/decorators';
+import { Role, ROLES } from '../../shared/constants';
+import { CreateLoanDto } from './dto/createLoan.dto';
+import { UpdateLoanDto } from './dto/updateLoan.dto';
 
 @Controller('loans')
 export class LoanController {
-	constructor(private readonly loanService: LoanService) {}
+  constructor(private readonly loanService: LoanService) {}
 
-	@Get()
-	async getLoans(@Query() query: QueryLoanDto) {
-		return this.loanService.getLoans(query);
-	}
+  @Get()
+  async getLoans(@Query() query: QueryLoanDto) {
+    return this.loanService.getLoans(query);
+  }
 
-	@Get('device/:deviceId/borrower')
-	async getUserBorrowingDevice(@Param('deviceId') deviceId: string ) {
-		return this.loanService.getUserBorrowingDevice(deviceId);
-	}
+  @Get('device/:deviceId/borrower')
+  async getUserBorrowingDevice(@Param('deviceId') deviceId: string) {
+    return this.loanService.getUserBorrowingDevice(deviceId);
+  }
 
-	@Roles(ROLES.MANAGER, ROLES.USER)
-	@Post('create')
-	async createLoan(@Body() dto: CreateLoanDto, @CurrentUser() me: { id: string; role: Role}) {
-		return this.loanService.createLoan(dto, me.id)
-	}
+  @Roles(ROLES.MANAGER, ROLES.USER)
+  @Post('create')
+  async createLoan(
+    @Body() dto: CreateLoanDto,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.loanService.createLoan(dto, me.id);
+  }
 
-	@Roles(ROLES.MANAGER, ROLES.USER)
-	@Patch('update')
-	async updateLoan(@Body() dto: UpdateLoanDto, @CurrentUser() me: { id: string; role: Role}) {
-		return this.loanService.updateLoan(dto, me.id)
-	}
+  @Roles(ROLES.MANAGER, ROLES.USER)
+  @Patch('update')
+  async updateLoan(
+    @Body() dto: UpdateLoanDto,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.loanService.updateLoan(dto, me.id);
+  }
 }
