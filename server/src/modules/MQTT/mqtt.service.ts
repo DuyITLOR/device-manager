@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import removeAccent from '../../shared/removeAccent';
 import { ConfigService } from '@nestjs/config';
 import { DevicesService } from '../devices/devices.service';
+import { LoanService } from '../loan/loan.service';
 
 @Injectable()
 export class MqttService implements OnModuleInit {
@@ -13,6 +14,7 @@ export class MqttService implements OnModuleInit {
     private readonly userService: UsersService,
     private readonly config: ConfigService,
     private readonly deviceService: DevicesService,
+    private readonly loanService: LoanService,
   ) {}
 
   onModuleInit() {
@@ -26,14 +28,21 @@ export class MqttService implements OnModuleInit {
     const deviceRequest = this.config.get<string>('mqtt.topic.deviceRequest');
     const deviceResponse = this.config.get<string>('mqtt.topic.deviceResponse');
 
-    // const requestStatus = this.config.get<string>('mqtt.topic.requestStatus');
-    // const responseStatus = this.config.get<string>('mqtt.topic.responseStatus');
+    const devicesLoan = this.config.get<string>('mqtt.topic.deviceLoan');
+    const devicesReturn = this.config.get<string>('mqtt.topic.deviceReturn');
+    const submitResponse = this.config.get<string>(
+      'mqtt.topic.deviceSubmitResponse',
+    );
+
     if (
       !host ||
       !rfidcode ||
       !nameRespone ||
       !deviceRequest ||
-      !deviceResponse
+      !deviceResponse ||
+      !devicesLoan ||
+      !devicesReturn ||
+      !submitResponse
     ) {
       throw new Error('[MQTT] Missing MQTT configuration!');
     }
@@ -55,6 +64,11 @@ export class MqttService implements OnModuleInit {
       this.client.subscribe(deviceRequest, (err: Error | null) => {
         if (err) console.error('Subscribe error:', err);
         else console.log('[MQTT] Subscribed to device/check');
+      });
+
+      this.client.subscribe(devicesLoan, (err: Error | null) => {
+        if (err) console.error('Subscribe error:', err);
+        else console.log('[MQTT] Subscribed to device/loan');
       });
     });
 
@@ -88,6 +102,30 @@ export class MqttService implements OnModuleInit {
           } catch (err) {
             this.client.publish(deviceResponse, 'NOT_FOUND');
             console.error('[MQTT] Device not found', err);
+          }
+        } else if (topic == devicesLoan) {
+          const data = JSON.parse(payload.toString().trim());
+          console.log('[MQTT] Recieve device loan request:', data);
+          const userId = await this.userService.getUserIdByCode(data.code);
+          if (!userId) {
+            console.error('[MQTT] User not found for code:', data.code);
+            this.client.publish(submitResponse, 'USER_NOT_FOUND');
+            return;
+          }
+          const devices = await this.loanService.createLoan(
+            {
+              deviceIds: data.devices,
+              borrowedAt: new Date(),
+            },
+            userId,
+          );
+
+          if (devices.success) {
+            console.log('[MQTT] Devices loaned:', devices);
+            this.client.publish(submitResponse, 'LOAN_SUCCESS');
+          } else {
+            console.error('[MQTT] Device loan failed:', devices.message);
+            this.client.publish(submitResponse, 'LOAN_FAILED');
           }
         }
       })().catch((err) => {

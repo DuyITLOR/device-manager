@@ -217,4 +217,12 @@ export class UsersService {
     if (user.isDeleted) throwUserError('USER_IS_DELETED');
     return user.name;
   }
+
+  async getUserIdByCode(code: string) {
+    const user = await this.prisma.user.findFirst({ where: { code } });
+
+    if (!user) throwUserError('USER_NOT_FOUND');
+    if (user.isDeleted) throwUserError('USER_IS_DELETED');
+    return user.id;
+  }
 }

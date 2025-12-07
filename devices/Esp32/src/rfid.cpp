@@ -22,7 +22,7 @@ String readRFID()
     id += String(rfid.uid.uidByte[i], HEX);
 
   id.toUpperCase();
-
+  Serial.println("[RFID] Scanned ID: " + id);
   rfid.PICC_HaltA();
   rfid.PCD_StopCrypto1();
   return id;

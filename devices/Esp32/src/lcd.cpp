@@ -90,15 +90,18 @@ void showUser(String name, int index = 0)
     lcd.print("EXIT");
 }
 
+
 void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConvert)
 {
-    if (deviceList.size() != lastDeviceCount)
+    int deviceCount = deviceList.size();
+    
+    if (deviceCount != lastDeviceCount)
     {
         lastSel = -1;
         lastScroll = -1;
         scrollOffset = 0;
         checkpointConvert = false;
-        lastDeviceCount = deviceList.size();
+        lastDeviceCount = deviceCount;
     }
 
     if (selectedIndex == lastSel && scrollOffset == lastScroll && checkpointConvert)
@@ -111,18 +114,25 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
     lcd.setCursor(0, 0);
     lcd.write(1);
     lcd.setCursor(1, 0);
-    lcd.print("Devices: " + String(deviceList.size()));
+    lcd.print("Devices: " + String(deviceCount));
 
     lcd.setCursor(19, 0);
-    if (mode == 1)
-        lcd.write(0);
-    else if (mode == 2)
-        lcd.write(2);
+    if (mode == 1) lcd.write(0);
+    else if (mode == 2) lcd.write(2);
 
-    if (deviceList.size() == 0)
+    if (deviceCount == 0)
     {
         lcd.setCursor(0, 1);
-        lcd.print("NotFound");
+        lcd.print("NotFound     ");
+
+        lcd.setCursor(0, 2);
+        lcd.print(selectedIndex == 0 ? "> SUBMIT" : "  SUBMIT");
+
+        lcd.setCursor(0, 3);
+        lcd.print(selectedIndex == 1 ? "> EXIT"   : "  EXIT");
+
+        lastSel = selectedIndex;
+        lastScroll = 0;
         return;
     }
 
@@ -130,26 +140,31 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
     {
         int displayIndex = scrollOffset + i;
         lcd.setCursor(0, i + 1);
-        if (displayIndex < deviceList.size())
+
+        if (displayIndex < deviceCount)
         {
-            if (displayIndex == selectedIndex)
-            {
-                lcd.print("> " + deviceList[displayIndex].name + "   ");
-            }
-            else
-            {
-                lcd.print("  " + deviceList[displayIndex].name + "   ");
-            }
+            lcd.print(displayIndex == selectedIndex ?
+                      "> " + deviceList[displayIndex].name :
+                      "  " + deviceList[displayIndex].name);
+        }
+        else if (displayIndex == deviceCount)
+        {
+            lcd.print(selectedIndex == displayIndex ? "> SUBMIT" : "  SUBMIT");
+        }
+        else if (displayIndex == deviceCount + 1)
+        {
+            lcd.print(selectedIndex == displayIndex ? "> EXIT" : "  EXIT");
         }
         else
         {
-            lcd.print("                     ");
+            lcd.print("                    ");
         }
     }
 
     lastSel = selectedIndex;
     lastScroll = scrollOffset;
 }
+
 
 void showDeleteConfirmation(const String &deviceName, int index)
 {
@@ -159,4 +174,10 @@ void showDeleteConfirmation(const String &deviceName, int index)
     lcd.print(index == 1 ? "> Yes" : "  Yes");
     lcd.setCursor(0, 3);
     lcd.print(index == 0 ? "> No" : "  No");
+}
+
+
+void showSubmitting(){
+    lcd.setCursor(0, 1);
+    lcd.print("Submitting...");
 }

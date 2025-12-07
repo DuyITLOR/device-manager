@@ -15,6 +15,7 @@ int state = 0;
 int checkpoint = 0;
 String lastName = "";
 int lastIndex = 0;
+String uid = "";
 
 // Đây là biến trước khi xóa
 int selectedIndexDelete = 0;
@@ -87,7 +88,7 @@ void loop()
             Serial.println("[STATE] Initialized LCD");
         }
         Serial.println("[STATE] Waiting for RFID scan...");
-        String uid = readRFID();
+        uid = readRFID();
 
         if (uid != "" && ready)
         {
@@ -154,10 +155,32 @@ void loop()
             checkpointConvert = false;
         }
         // Serial.println("[STATE_2] Showing Device List");
-        handleScroll(lastIndex, scrollOffset, deviceList.size());
+        int totalItems = deviceList.size() + 2;
+        handleScroll(lastIndex, scrollOffset, totalItems);
         showDeviceList(lastIndex, scrollOffset, checkpointConvert);
-        selectedIndexDelete = lastIndex;
-        button(3);
+        // button(3);
+        if (digitalRead(RE_pinSW) == LOW)
+        {
+            while (digitalRead(RE_pinSW) == LOW)
+                ;
+            if (lastIndex < deviceList.size())
+            {
+                selectedIndexDelete = lastIndex;
+                state = 3;
+                encoderCount = 0;
+                checkpoint = 0;
+            }
+            else if (lastIndex == deviceList.size())
+            {
+                state = 4;
+                checkpoint = 0;
+                Serial.println("[STATE_4] Submitting selection");
+            }
+            else
+            {
+                reset();
+            }
+        }
     }
     else if (state == 3)
     {
@@ -201,5 +224,28 @@ void loop()
                 checkpointConvert = false;
             }
         }
+    }
+    else if (state == 4)
+    {
+        if (checkpoint == 0)
+        {
+            lcd.clear();
+            checkpoint = 1;
+
+            showSubmitting();
+            sendLoanRequest(uid);
+            Serial.println("[STATE_4] Preparing MQTT submission");
+            Serial.println("[STATE_4] uuid: " + uid);
+        }
+        if (respone) {
+            Serial.println("[STATE_4] Submission successful.");
+            lcd.clear();
+            lcd.setCursor(0, 1);
+            lcd.print("  SUBMIT SUCCESS   ");
+            delay(2000);
+            respone = false;
+            reset();
+        }
+        delay(100);
     }
 }

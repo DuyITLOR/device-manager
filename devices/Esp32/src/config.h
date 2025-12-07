@@ -27,6 +27,9 @@ extern const char* TOPIC_DEVICE_CHECK;
 extern const char* TOPIC_DEVICE_RESULT;
 
 
+extern const char* TOPIC_DEVICE_LOAN;
+extern const char* TOPIC_DEVICE_RETURN;
+extern const char* TOPIC_DEVICE_RESPONSE;
 
 extern int mode;
 extern int state;

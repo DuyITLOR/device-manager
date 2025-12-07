@@ -11,6 +11,7 @@ void showWelcome();
 void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConvert);
 void showDeleteConfirmation(const String& deviceName, int index);
 void showUser(String name, int index);
+void showSubmitting();
 
 
 extern int lastSel;

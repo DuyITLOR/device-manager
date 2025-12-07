@@ -8,6 +8,7 @@ PubSubClient client(secureClient);
 
 String receivedName = "";
 bool ready = false;
+bool respone = false;
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
@@ -47,6 +48,16 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         saveDevice(id, name);
         Serial.println("[Device] Count: " + String(deviceList.size()));
         Serial.println("[DEVICE] Saved -> UUID: " + id + " | NAME: " + name);
+    } else if (String(topic) == TOPIC_DEVICE_RESPONSE)
+    {
+        Serial.println("[MQTT] Device Operation Response: " + msg);
+        if (msg == "LOAN_SUCCESS") {
+            respone = true;
+            Serial.println("[MQTT] Device operation successful.");
+        } else {
+            respone = false;
+            Serial.println("[MQTT] Device operation failed: " + msg);
+        }
     }
     else
     {
@@ -75,6 +86,8 @@ void reconnectMQTT()
             Serial.println("[MQTT] Subscribed to " + String(TOPIC_NAME_RECV));
             client.subscribe(TOPIC_DEVICE_RESULT);
             Serial.println("[MQTT] Subscribed to " + String(TOPIC_DEVICE_RESULT));
+            client.subscribe(TOPIC_DEVICE_RESPONSE);
+            Serial.println("[MQTT] Subscribed to " + String(TOPIC_DEVICE_RESPONSE));
         }
         else
         {
@@ -95,4 +108,22 @@ void sendDeviceId(const String &deviceID)
 {
     Serial.println("[MQTT] Sending devices id: " + deviceID);
     client.publish(TOPIC_DEVICE_CHECK, deviceID.c_str());
+}
+
+
+void sendLoanRequest(const String &userCode)
+{
+    StaticJsonDocument<256> doc;
+    doc["code"] = userCode;
+
+    JsonArray arr = doc.createNestedArray("devices");
+    for (auto &item : deviceList)
+    {
+        arr.add(item.uuid);
+    }
+
+    String json;
+    serializeJson(doc, json);
+    Serial.println("[MQTT] Sending Loan Request: " + json);
+    client.publish(TOPIC_DEVICE_LOAN, json.c_str());
 }
