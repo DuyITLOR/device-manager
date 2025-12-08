@@ -22,7 +22,7 @@ interface DeviceDetailDialogProps {
   isTransferring?: boolean;
 }
 
-export function DeviceDetailDialog({
+export default function DeviceDetailDialog({
   open,
   onOpenChange,
   device,
