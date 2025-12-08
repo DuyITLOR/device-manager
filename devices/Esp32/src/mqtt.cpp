@@ -29,6 +29,8 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         if (err)
         {
             Serial.println("[MQTT] JSON Parse Failed");
+            showError("USER NOT FOUND");
+            reset();
             return;
         }
         receivedName = getLastTwoWords(doc["name"] | "");
@@ -43,14 +45,8 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
         if (err)
         {
-            Serial.println("[MQTT] JSON Parse Failed");
-             Serial.println("[DEVICE] Device Not Found / Invalid");
-            lcd.clear();
-            lcd.setCursor(0, 1);
-            lcd.print(" DEVICE NOT FOUND ");
-            delay(1000);
-            checkpointConvert = false;
-            lcd.clear();
+            Serial.println("[MQTT] Device Not Found / Invalid");
+            showError(" DEVICE NOT FOUND ");
             return;
         }
 
@@ -59,13 +55,8 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
         if (id == "" || name == "")
         {
-            Serial.println("[DEVICE] Device Not Found / Invalid");
-            lcd.clear();
-            lcd.setCursor(0, 1);
-            lcd.print(" DEVICE NOT FOUND ");
-            delay(1000);
-            checkpointConvert = false;
-            lcd.clear();
+            Serial.println("[MQTT] Device Not Found / Invalid");
+            showError(" DEVICE NOT FOUND ");
             return;
         }
 
@@ -75,7 +66,7 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     } else if (String(topic) == TOPIC_DEVICE_RESPONSE)
     {
         Serial.println("[MQTT] Device Operation Response: " + msg);
-        if (msg == "LOAN_SUCCESS") {
+        if (msg == "SUCCESS") {
             respone = 1;
             Serial.println("[MQTT] Device operation successful.");
         } else {
@@ -138,6 +129,7 @@ void sendDeviceId(const String &deviceID)
         StaticJsonDocument<256> doc;
         doc["code"] = code;
         doc["deviceId"] = deviceID;
+        doc["isReturn"] = true;
         String json;
         serializeJson(doc, json);
         Serial.println("[MQTT] Sending devices id to return: " + json);
@@ -150,6 +142,12 @@ void sendLoanRequest(const String &userCode)
 {
     StaticJsonDocument<256> doc;
     doc["code"] = userCode;
+
+    if (!deviceList.size()) {
+        Serial.println("[MQTT] No devices to loan.");
+        showError(" NO DEVICES TO LOAN ");
+        return;
+    }
 
     JsonArray arr = doc.createNestedArray("devices");
     for (auto &item : deviceList)

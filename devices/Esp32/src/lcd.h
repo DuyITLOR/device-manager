@@ -12,7 +12,7 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
 void showDeleteConfirmation(const String& deviceName, int index);
 void showUser(String name, int index);
 void showSubmitting();
-
+void showError(String message);
 
 extern int lastSel;
 extern int lastScroll;

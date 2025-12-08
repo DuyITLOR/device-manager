@@ -6,6 +6,7 @@ LiquidCrystal_I2C lcd(0x27, 20, 4);
 
 int lastSel = -1;
 int lastScroll = -1;
+int lastIndexDelete = 0;
 
 byte arrowRight[] = {
     B00000,
@@ -77,10 +78,10 @@ void showUser(String name, int index = 0)
     lcd.print("NAME:" + name);
 
     lcd.setCursor(3, 2);
-    lcd.print("MUON");
+    lcd.print("BORROW");
 
-    lcd.setCursor(15, 2);
-    lcd.print("TRA");
+    lcd.setCursor(13, 2);
+    lcd.print("RETURN");
 }
 
 
@@ -161,8 +162,12 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
 
 void showDeleteConfirmation(const String &deviceName, int index)
 {
+    if (index != lastIndexDelete) {
+        lastIndexDelete = index;
+        lcd.clear();
+    }
     lcd.setCursor(0, 1);
-    lcd.print("Deleted: " + deviceName + "   ");
+    lcd.print("Delete: " + deviceName + "   ");
     lcd.setCursor(0, 2);
     lcd.print(index == 1 ? "> Yes" : "  Yes");
     lcd.setCursor(0, 3);
@@ -173,4 +178,13 @@ void showDeleteConfirmation(const String &deviceName, int index)
 void showSubmitting(){
     lcd.setCursor(0, 1);
     lcd.print("Submitting...");
+}
+
+
+void showError(String message){
+    lcd.clear();
+    lcd.setCursor(0, 1);
+    lcd.print(message);
+    checkpointConvert = false;
+    delay(1500);
 }
