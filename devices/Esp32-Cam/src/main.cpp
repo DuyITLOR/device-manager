@@ -28,8 +28,8 @@ void setup()
   WiFi.mode(WIFI_STA);
   // WiFi.begin("THREE O'CLOCK", "3open24h");
   //WiFi.begin("i680", "RoboticsLab@1!");
-  uint8_t routerBSSID[] = {0x40, 0xE3, 0xD6, 0xC1, 0xF0, 0x84}; // BSSID của AP ESP32 chính
-  WiFi.begin("THREE O'CLOCK", "3open24h", 1, routerBSSID);
+  uint8_t routerBSSID[] = {0x40, 0xE3, 0xD6, 0xC3, 0x0D, 0xC4}; // BSSID của AP ESP32 chính
+  WiFi.begin("THREE O'CLOCK", "3open24h", 6, routerBSSID);
   Serial.print("[WiFi] Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
