@@ -12,7 +12,7 @@ import { QueryLoanDto } from './dto/queryLoan.dto';
 import { CurrentUser, Roles } from '../../common/decorators';
 import { Role, ROLES } from '../../shared/constants';
 import { CreateLoanDto } from './dto/createLoan.dto';
-import { UpdateLoanDto } from './dto/updateLoan.dto';
+import { UpdateManyLoansDto } from './dto/updateLoan.dto';
 
 @Controller('loans')
 export class LoanController {
@@ -43,7 +43,7 @@ export class LoanController {
   @Roles(ROLES.MANAGER, ROLES.USER)
   @Patch('update')
   async updateLoan(
-    @Body() dto: UpdateLoanDto,
+    @Body() dto: UpdateManyLoansDto,
     @CurrentUser() me: { id: string; role: Role },
   ) {
     return this.loanService.updateLoan(dto, me.id);
