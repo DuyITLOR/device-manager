@@ -13,6 +13,7 @@ import { Badge } from '../ui/badge';
 import { DEVICE_STATUS_MAP, DEVICE_STATUS_VARIANTS } from '@/lib/mapper/deviceStatus';
 import type { Device } from '@/lib/types/device';
 import { Loader2 } from 'lucide-react';
+import { getUserId } from '@/lib/utils/auth';
 
 interface DeviceDetailDialogProps {
   open: boolean;
@@ -30,7 +31,8 @@ export default function DeviceDetailDialog({
   isTransferring,
 }: DeviceDetailDialogProps) {
   if (!device) return null;
-  const isDisableTransferButton = device.status !== 'BORROWED' || !device.borrowerId || isTransferring;
+  const currentUserId = getUserId();
+  const isDisableTransferButton = device.status !== 'BORROWED' || device.borrowerId === currentUserId || isTransferring;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

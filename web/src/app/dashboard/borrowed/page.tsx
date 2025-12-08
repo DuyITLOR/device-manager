@@ -13,6 +13,7 @@ import { fetchAllLoans } from '@/lib/services/loans';
 import { mapLoansToDevices } from '@/lib/mapper/loanToDevice';
 import type { Device } from '@/lib/types/device';
 import PaginationComponent from '@/components/ui/pagination-component';
+import { fetchDeviceById } from '@/lib/services/devices';
 
 function BorrowedPageContent() {
   const router = useRouter();
@@ -83,7 +84,8 @@ function BorrowedPageContent() {
 
     setLoadingDeviceDetail(true);
     try {
-      setSelectedDevice(device);
+      const detailedDevice = await fetchDeviceById(device.id);
+      setSelectedDevice(detailedDevice);
       setDetailDialogOpen(true);
     } catch (err: any) {
       toast({
