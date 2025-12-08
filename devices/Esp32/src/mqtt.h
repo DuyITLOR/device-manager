@@ -8,6 +8,7 @@ void reconnectMQTT();
 void sendRFID(const String &uid);
 void sendDeviceId(const String &deviceID);
 void sendLoanRequest(const String &userCode);
+void sendReturnRequest(const String &userCode);
 
 extern PubSubClient client;
 extern String receivedName;

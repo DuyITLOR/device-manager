@@ -163,3 +163,19 @@ void sendLoanRequest(const String &userCode)
     client.publish(TOPIC_DEVICE_LOAN, json.c_str());
 }
 
+void sendReturnRequest(const String &userCode)
+{
+    StaticJsonDocument<256> doc;
+    doc["code"] = userCode;
+
+    JsonArray arr = doc.createNestedArray("devices");
+    for (auto &item : deviceList)
+    {
+        arr.add(item.uuid);
+    }
+
+    String json;
+    serializeJson(doc, json);
+    Serial.println("[MQTT] Sending Return Request: " + json);
+    client.publish(TOPIC_DEVICE_RETURN, json.c_str());
+}

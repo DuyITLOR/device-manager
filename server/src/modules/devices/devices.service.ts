@@ -252,7 +252,10 @@ export class DevicesService {
   async getDeviceBorrowed(deviceId: string, userId: string) {
     const loan = await this.loanService.getUserBorrowingDevice(deviceId);
 
-    if (!loan) throwDeviceError('DEVICE_NOT_FOUND');
+    if (!loan) {
+      throwDeviceError('DEVICE_NOT_FOUND');
+      console.log('Not found device borrowed');
+    }
 
     if (loan.data?.borrowerId === userId) {
       return {

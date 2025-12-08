@@ -87,6 +87,11 @@ export class MqttService implements OnModuleInit {
         if (err) console.error('Subscribe error:', err);
         else console.log('[MQTT] Subscribed to ', deviceSubmitLoan);
       });
+
+      this.client.subscribe(deviceSubmitReturn, (err: Error | null) => {
+        if (err) console.error('Subscribe error:', err);
+        else console.log('[MQTT] Subscribed to ', deviceSubmitReturn);
+      });
     });
 
     this.client.on('message', (topic: string, payload: Buffer) => {
@@ -179,6 +184,17 @@ export class MqttService implements OnModuleInit {
             console.error('[MQTT] Device loan failed:', devices.message);
             this.client.publish(deviceSubmitResponse, 'LOAN_FAILED');
           }
+        } else if (topic == deviceSubmitReturn) {
+          console.log('[MQTT] vo dc ham return');
+          const data = JSON.parse(payload.toString().trim());
+          console.log('[MQTT] Recieve device return request:', data);
+          const userId = await this.userService.getUserIdByCode(data.code);
+          if (!userId) {
+            console.error('[MQTT] User not found for code:', data.code);
+            this.client.publish(deviceSubmitResponse, 'USER_NOT_FOUND');
+            return;
+          }
+          console.log('[MQTT] Data devices from esp32:', data.devices);
         }
       })().catch((err) => {
         console.error('[MQTT] Error in message handler', err);

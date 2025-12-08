@@ -34,3 +34,5 @@ const char* TOPIC_DEVICE_RESPONSE = "devices/submit/response";
 
 int mode = 0;
 int lastDeviceCount = 0;
+
+

@@ -255,9 +255,8 @@ void loop()
                 sendLoanRequest(uid);
             } else {
                 Serial.println("[STATE_4] Preparing MQTT submission for return");
+                sendReturnRequest(uid);
             }
-            Serial.println("[STATE_4] Preparing MQTT submission");
-            Serial.println("[STATE_4] uuid: " + uid);
         }
         if (respone == 1) {
             Serial.println("[STATE_4] Submission successful.");
