@@ -11,6 +11,6 @@ void sendLoanRequest(const String &userCode);
 
 extern PubSubClient client;
 extern String receivedName;
-extern bool respone;
-
+extern int respone;
+extern String code;
 extern bool ready;

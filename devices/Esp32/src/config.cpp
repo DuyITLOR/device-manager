@@ -25,7 +25,7 @@ const char* TOPIC_NAME_RECV = "rfid/server/name";
 
 const char* TOPIC_DEVICE_CHECK_LOAN  = "devices/check/loan";
 const char* TOPIC_DEVICE_CHECK_RETURN = "devices/check/return";
-const char* TOPIC_DEVICE_RESULT = "devices/result";
+const char* TOPIC_DEVICE_CHECK_RESPONSE = "devices/check/response";
 
 const char* TOPIC_DEVICE_LOAN = "devices/submit/loan";
 const char* TOPIC_DEVICE_RETURN = "devices/submit/return";

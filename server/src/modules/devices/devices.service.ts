@@ -250,23 +250,14 @@ export class DevicesService {
   }
 
   async getDeviceBorrowed(deviceId: string, userId: string) {
-    const device = await this.prisma.device.findFirst({
-      where: {
-        id: deviceId,
-        status: 'BORROWED',
-        isDeleted: false,
-      },
-    });
-
-    if (!device) throwDeviceError('DEVICE_NOT_FOUND');
     const loan = await this.loanService.getUserBorrowingDevice(deviceId);
 
     if (!loan) throwDeviceError('DEVICE_NOT_FOUND');
 
     if (loan.data?.borrowerId === userId) {
       return {
-        id: device.id,
-        name: device.name,
+        id: loan.data.deviceId,
+        name: loan.data.device?.name,
       };
     } else return null;
   }

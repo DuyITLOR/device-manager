@@ -2,13 +2,15 @@
 #include "config.h"
 #include "handle.h"
 #include <WiFiClientSecure.h>
+#include <lcd.h>
 
 WiFiClientSecure secureClient;
 PubSubClient client(secureClient);
 
 String receivedName = "";
 bool ready = false;
-bool respone = false;
+int respone = -1;
+String code = "";
 
 void mqttCallback(char *topic, byte *payload, unsigned int length)
 {
@@ -21,10 +23,19 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
 
     if (String(topic) == TOPIC_NAME_RECV)
     {
-        receivedName = getLastTwoWords(msg);
-        Serial.println("Received Name: " + receivedName);
+        StaticJsonDocument<128> doc;
+        auto err = deserializeJson(doc, msg);
+
+        if (err)
+        {
+            Serial.println("[MQTT] JSON Parse Failed");
+            return;
+        }
+        receivedName = getLastTwoWords(doc["name"] | "");
+        code = doc["code"] | "";
+        Serial.println("Received Name: " + receivedName + " | Code: " + code);
     }
-    else if (String(topic) == TOPIC_DEVICE_RESULT)
+    else if (String(topic) == TOPIC_DEVICE_CHECK_RESPONSE)
     {
 
         StaticJsonDocument<128> doc;
@@ -33,6 +44,13 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         if (err)
         {
             Serial.println("[MQTT] JSON Parse Failed");
+             Serial.println("[DEVICE] Device Not Found / Invalid");
+            lcd.clear();
+            lcd.setCursor(0, 1);
+            lcd.print(" DEVICE NOT FOUND ");
+            delay(1000);
+            checkpointConvert = false;
+            lcd.clear();
             return;
         }
 
@@ -42,6 +60,12 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
         if (id == "" || name == "")
         {
             Serial.println("[DEVICE] Device Not Found / Invalid");
+            lcd.clear();
+            lcd.setCursor(0, 1);
+            lcd.print(" DEVICE NOT FOUND ");
+            delay(1000);
+            checkpointConvert = false;
+            lcd.clear();
             return;
         }
 
@@ -52,10 +76,10 @@ void mqttCallback(char *topic, byte *payload, unsigned int length)
     {
         Serial.println("[MQTT] Device Operation Response: " + msg);
         if (msg == "LOAN_SUCCESS") {
-            respone = true;
+            respone = 1;
             Serial.println("[MQTT] Device operation successful.");
         } else {
-            respone = false;
+            respone = 0;
             Serial.println("[MQTT] Device operation failed: " + msg);
         }
     }
@@ -84,8 +108,8 @@ void reconnectMQTT()
             ready = true;
             client.subscribe(TOPIC_NAME_RECV);
             Serial.println("[MQTT] Subscribed to " + String(TOPIC_NAME_RECV));
-            client.subscribe(TOPIC_DEVICE_RESULT);
-            Serial.println("[MQTT] Subscribed to " + String(TOPIC_DEVICE_RESULT));
+            client.subscribe(TOPIC_DEVICE_CHECK_RESPONSE);
+            Serial.println("[MQTT] Subscribed to " + String(TOPIC_DEVICE_CHECK_RESPONSE));
             client.subscribe(TOPIC_DEVICE_RESPONSE);
             Serial.println("[MQTT] Subscribed to " + String(TOPIC_DEVICE_RESPONSE));
         }
@@ -106,8 +130,19 @@ void sendRFID(const String &uid)
 
 void sendDeviceId(const String &deviceID)
 {
-    Serial.println("[MQTT] Sending devices id: " + deviceID);
-    client.publish(TOPIC_DEVICE_CHECK_LOAN, deviceID.c_str());
+    
+    if (mode == 1){
+        Serial.println("[MQTT] Sending devices id to loan: " + deviceID);
+        client.publish(TOPIC_DEVICE_CHECK_LOAN, deviceID.c_str());
+    } else {
+        StaticJsonDocument<256> doc;
+        doc["code"] = code;
+        doc["deviceId"] = deviceID;
+        String json;
+        serializeJson(doc, json);
+        Serial.println("[MQTT] Sending devices id to return: " + json);
+        client.publish(TOPIC_DEVICE_CHECK_RETURN, json.c_str());
+    }
 }
 
 
@@ -127,3 +162,4 @@ void sendLoanRequest(const String &userCode)
     Serial.println("[MQTT] Sending Loan Request: " + json);
     client.publish(TOPIC_DEVICE_LOAN, json.c_str());
 }
+

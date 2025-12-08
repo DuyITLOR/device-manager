@@ -97,10 +97,10 @@ export class MqttService implements OnModuleInit {
 
           try {
             const name = await this.userService.getNameByCode(code);
-            const newName = removeAccent(name);
+            const data = { name: removeAccent(name), code: code };
 
-            this.client.publish(nameRespone, newName);
-            console.log('[MQTT] Sent name: ', newName);
+            this.client.publish(nameRespone, JSON.stringify(data));
+            console.log('[MQTT] Sent name: ', JSON.stringify(data));
           } catch (err) {
             this.client.publish(nameRespone || '', 'NOT_FOUND');
             console.error('[MQTT] User not found', err);
@@ -147,7 +147,7 @@ export class MqttService implements OnModuleInit {
               return;
             }
             if (device) {
-              device.name = removeAccent(device.name);
+              device.name = removeAccent(device?.name || '');
             }
             this.client.publish(deviceCheckResponse, JSON.stringify(device));
             console.log('[MQTT] Device found for return:', device);
