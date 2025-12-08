@@ -43,16 +43,16 @@ export default function UserNavigation() {
             </div>
           </Link>
           <Link
-            href='/dashboard/my-loans'
+            href='/dashboard/transfer'
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              pathname === '/dashboard/my-loans'
+              pathname === '/dashboard/transfer'
                 ? 'bg-primary text-primary-foreground shadow-lg'
                 : 'hover:bg-muted text-muted-foreground'
             }`}
           >
             <div className='flex items-center gap-2'>
               <Package className='w-4 h-4' />
-              <span>Thiết bị đã mượn</span>
+              <span>Yêu cầu chuyển</span>
             </div>
           </Link>
         </div>
