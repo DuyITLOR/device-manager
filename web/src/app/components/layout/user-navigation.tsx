@@ -1,23 +1,29 @@
+'use client';
 import { clearUserInfo, getName, getRole } from '@/lib/utils/auth';
 import { Package, List } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import AccountDropdown from '../user/account-dropdown';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ChangePasswordDialog from '../user/change-password-dialog';
 
 export default function UserNavigation() {
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-
+  const [role, setRole] = useState('');
+  const [userName, setUserName] = useState('');
   const handleLogout = () => {
     router.push('/');
     clearUserInfo();
   };
 
-  const userName = getName() || 'User';
-  const role = getRole() || 'USER';
+  useEffect(() => {
+    const fetchedRole = getRole() || 'USER';
+    const fetchedName = getName() || 'User';
+    setRole(fetchedRole);
+    setUserName(fetchedName);
+  }, []);
 
   return (
     <div className='glass-card mb-6'>

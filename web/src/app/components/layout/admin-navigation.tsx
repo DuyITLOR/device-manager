@@ -6,20 +6,26 @@ import { Package, Users, History } from 'lucide-react';
 import AccountDropdown from '../user/account-dropdown';
 import ChangePasswordDialog from '../user/change-password-dialog';
 import { clearUserInfo, getName, getRole } from '@/lib/utils/auth';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function AdminNavigation() {
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const [role, setRole] = useState('');
+  const [userName, setUserName] = useState('');
 
   const handleLogout = () => {
     router.push('/');
     clearUserInfo();
   };
 
-  const userName = getName() || 'Admin';
-  const role = getRole() || 'ADMIN';
+  useEffect(() => {
+    const fetchedRole = getRole() || 'ADMIN';
+    const fetchedName = getName() || 'Admin';
+    setRole(fetchedRole);
+    setUserName(fetchedName);
+  }, []);
   return (
     <div className='glass-card p-4'>
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4'>
