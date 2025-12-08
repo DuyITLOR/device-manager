@@ -107,7 +107,7 @@ void sendRFID(const String &uid)
 void sendDeviceId(const String &deviceID)
 {
     Serial.println("[MQTT] Sending devices id: " + deviceID);
-    client.publish(TOPIC_DEVICE_CHECK, deviceID.c_str());
+    client.publish(TOPIC_DEVICE_CHECK_LOAN, deviceID.c_str());
 }
 
 

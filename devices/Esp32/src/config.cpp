@@ -23,12 +23,13 @@ const int RE_pinSW = 26;
 const char* TOPIC_RFID_SEND = "rfid/esp32/code";
 const char* TOPIC_NAME_RECV = "rfid/server/name";
 
-const char* TOPIC_DEVICE_CHECK  = "devices/check";
+const char* TOPIC_DEVICE_CHECK_LOAN  = "devices/check/loan";
+const char* TOPIC_DEVICE_CHECK_RETURN = "devices/check/return";
 const char* TOPIC_DEVICE_RESULT = "devices/result";
 
-const char* TOPIC_DEVICE_LOAN = "devices/loan";
-const char* TOPIC_DEVICE_RETURN = "devices/return";
-const char* TOPIC_DEVICE_RESPONSE = "devices/response";
+const char* TOPIC_DEVICE_LOAN = "devices/submit/loan";
+const char* TOPIC_DEVICE_RETURN = "devices/submit/return";
+const char* TOPIC_DEVICE_RESPONSE = "devices/submit/response";
 
 
 int mode = 0;
