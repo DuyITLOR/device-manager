@@ -16,7 +16,7 @@ import {
 } from '../../shared/constants';
 import { QueryLoanDto } from './dto/queryLoan.dto';
 import { CreateLoanDto } from './dto/createLoan.dto';
-import { UpdateLoanDto } from './dto/updateLoan.dto';
+import { UpdateManyLoansDto } from './dto/updateLoan.dto';
 import { generateDiff } from '../../shared/utils';
 
 type LoanWithRelations = Loan & {
@@ -256,119 +256,119 @@ export class LoanService {
     };
   }
 
-  async updateLoan(dto: UpdateLoanDto, actorId: string) {
-    const existingLoan = await this.prisma.loan.findUnique({
-      where: { id: dto.loanId, status: 'BORROWED' },
-      include: {
-        borrower: true,
-        device: true,
-      },
-    });
-
-    if (!existingLoan) {
-      throwAppError('LOAN_NOT_FOUND', LOAN_MESSAGES.LOAN_NOT_FOUND);
-    }
-
-    let actionType: ActivityAction = ActivityAction.LOAN_RETURN;
-    let logDetails: any = {};
-    let { loanId, ...updatedData } = dto;
-    let loanUpdateData: Prisma.LoanUpdateInput = { ...updatedData };
-    let deviceUpdateData: any = undefined;
-
-    // Case 1: Return Operation
-    if (dto.status === 'RETURNED' && existingLoan.status === 'BORROWED') {
-      console.log('Return operation detected');
-      loanUpdateData.returnedAt = new Date();
-
-      deviceUpdateData = {
-        status: 'AVAILABLE',
-      };
-
-      logDetails = {
-        type: 'FLOW',
-        deviceName: existingLoan.device.name,
-        userName: existingLoan.borrower.name,
-      };
-    }
-    // Case 2: Transfer Operation
-    else if (dto.borrowerId && dto.borrowerId !== existingLoan.borrowerId) {
-      console.log('Transfer operation detected');
-      const newBorrower = await this.prisma.user.findUnique({
-        where: { id: dto.borrowerId },
-      });
-
-      if (!newBorrower) {
-        throwAppError('USER_NOT_FOUND', USER_MESSAGES.USER_NOT_FOUND);
-      }
-
-      actionType = ActivityAction.TRANSFER_APPROVE;
-      logDetails = {
-        type: 'FLOW',
-        deviceName: existingLoan.device.name,
-        userName: newBorrower.name,
-      };
-    }
-    // Case 3: Update Notes in the Loan record
-    else {
-      console.log('Normal update operation detected');
-      const diff = generateDiff(existingLoan, dto);
-      actionType = ActivityAction.LOAN_UPDATE;
-      logDetails = {
-        type: 'UPDATE',
-        diff,
-      };
-    }
-
-    const updatedLoan = await this.prisma.$transaction(
+  async updateLoan(dto: UpdateManyLoansDto, actorId: string) {
+    const updatedLoans = await this.prisma.$transaction(
       async (tx) => {
-        const updated = await tx.loan.update({
-          where: { id: dto.loanId },
-          data: loanUpdateData,
-          include: {
-            borrower: true,
-            device: true,
-          },
-        });
-
-        // device update, case 1: return operation
-        if (deviceUpdateData) {
-          await tx.device.update({
-            where: { id: existingLoan.deviceId },
-            data: deviceUpdateData,
-          });
-          // log for device update
-          await tx.activityLog.create({
-            data: {
-              actorId: actorId,
-              action: ActivityAction.DEVICE_UPDATE,
-              targetType: ActivityTargetType.Device,
-              targetId: existingLoan.deviceId,
-              details: logDetails,
+        const results: LoanWithRelations[] = [];
+        
+        for (const record of dto.loanRecords) {
+          const existingLoan = await tx.loan.findUnique({
+            where: { id: record.loanId, status: 'BORROWED' },
+            include: {
+              borrower: true,
+              device: true,
             },
           });
-        }
 
-        // log for loan update
-        if (
-          actionType === ActivityAction.LOAN_RETURN ||
-          actionType === ActivityAction.TRANSFER_APPROVE ||
-          (logDetails.diff && Object.keys(logDetails.diff).length > 0)
-        ) {
-          await tx.activityLog.create({
-            data: {
-              actorId: actorId,
-              action: actionType,
-              targetType: ActivityTargetType.Loan,
-              targetId: dto.loanId,
-              details: logDetails,
+          if (!existingLoan) {
+            throwAppError('LOAN_NOT_FOUND', LOAN_MESSAGES.LOAN_NOT_FOUND);
+          }
+
+          let actionType: ActivityAction = ActivityAction.LOAN_RETURN;
+          let logDetails: any = {};
+          let { loanId, ...updatedData } = record;
+          let loanUpdateData: Prisma.LoanUpdateInput = { ...updatedData };
+          let deviceUpdateData: any = undefined;
+
+          // Case 1: Return Operation
+          if (record.status === 'RETURNED' && existingLoan.status === 'BORROWED') {
+            console.log('Return operation detected');
+            loanUpdateData.returnedAt = new Date();
+
+            deviceUpdateData = {
+              status: 'AVAILABLE',
+            };
+
+            logDetails = {
+              type: 'FLOW',
+              deviceName: existingLoan.device.name,
+              userName: existingLoan.borrower.name,
+            };
+          }
+          // Case 2: Transfer Operation
+          else if (
+            record.borrowerId &&
+            record.borrowerId !== existingLoan.borrowerId
+          ) {
+            console.log('Transfer operation detected');
+            const newBorrower = await tx.user.findUnique({
+              where: { id: record.borrowerId },
+            });
+
+            if (!newBorrower) {
+              throwAppError('USER_NOT_FOUND', USER_MESSAGES.USER_NOT_FOUND);
+            }
+
+            actionType = ActivityAction.TRANSFER_APPROVE;
+            logDetails = {
+              type: 'FLOW',
+              deviceName: existingLoan.device.name,
+              userName: newBorrower.name,
+            };
+          }
+          // Case 3: Update Notes in the Loan record
+          else {
+            console.log('Normal update operation detected');
+            const diff = generateDiff(existingLoan, updatedData);
+            actionType = ActivityAction.LOAN_UPDATE;
+            logDetails = {
+              type: 'UPDATE',
+              diff,
+            };
+          }
+
+          // update the loan record
+          const updated = await tx.loan.update({
+            where: { id: record.loanId },
+            data: loanUpdateData,
+            include: {
+              borrower: true,
+              device: true,
             },
           });
+
+          // device update, case 1: return operation
+          if (deviceUpdateData) {
+            await tx.device.update({
+              where: { id: existingLoan.deviceId },
+              data: deviceUpdateData,
+            });
+          }
+
+          // log for loan update
+          if (
+            actionType === ActivityAction.LOAN_RETURN ||
+            actionType === ActivityAction.TRANSFER_APPROVE ||
+            (logDetails.diff && Object.keys(logDetails.diff).length > 0)
+          ) {
+            await tx.activityLog.create({
+              data: {
+                actorId: actorId,
+                action: actionType,
+                targetType: ActivityTargetType.Loan,
+                targetId: record.loanId,
+                details: logDetails,
+              },
+            });
+          }
+          results.push(updated);
         }
-        return updated;
+
+        return results;
       },
       {
         maxWait: 5000,
-        timeout: 20000,
+        timeout: 40000,
       },
     );
 
@@ -376,7 +376,7 @@ export class LoanService {
       status: LOAN_MESSAGES.LOAN_UPDATE_SUCCESS.status,
       success: true,
       message: LOAN_MESSAGES.LOAN_UPDATE_SUCCESS.message,
-      data: this.sanitize(updatedLoan),
+      data: updatedLoans.map((loan) => this.sanitize(loan)),
     };
   }
 }
