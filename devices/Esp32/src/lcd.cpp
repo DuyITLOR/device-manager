@@ -69,7 +69,7 @@ void showUser(String name, int index = 0)
     }
     else if (index == 1)
     {
-        lcd.setCursor(14, 2);
+        lcd.setCursor(11, 2);
     }
 
     lcd.write(0);
@@ -80,15 +80,14 @@ void showUser(String name, int index = 0)
     lcd.setCursor(3, 2);
     lcd.print("BORROW");
 
-    lcd.setCursor(13, 2);
+    lcd.setCursor(12, 2);
     lcd.print("RETURN");
 }
-
 
 void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConvert)
 {
     int deviceCount = deviceList.size();
-    
+
     if (deviceCount != lastDeviceCount)
     {
         lastSel = -1;
@@ -111,8 +110,10 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
     lcd.print("Devices: " + String(deviceCount));
 
     lcd.setCursor(19, 0);
-    if (mode == 1) lcd.write(0);
-    else if (mode == 2) lcd.write(2);
+    if (mode == 1)
+        lcd.write(0);
+    else if (mode == 2)
+        lcd.write(2);
 
     if (deviceCount == 0)
     {
@@ -123,7 +124,7 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
         lcd.print(selectedIndex == 0 ? "> SUBMIT" : "  SUBMIT");
 
         lcd.setCursor(0, 3);
-        lcd.print(selectedIndex == 1 ? "> EXIT"   : "  EXIT");
+        lcd.print(selectedIndex == 1 ? "> EXIT" : "  EXIT");
 
         lastSel = selectedIndex;
         lastScroll = 0;
@@ -137,9 +138,9 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
 
         if (displayIndex < deviceCount)
         {
-            lcd.print(displayIndex == selectedIndex ?
-                      "> " + deviceList[displayIndex].name :
-                      "  " + deviceList[displayIndex].name);
+            lcd.print(displayIndex == selectedIndex ? "> " + deviceList[displayIndex].name  : "  " + deviceList[displayIndex].name);
+            lcd.setCursor(17, i + 1);
+            lcd.print(deviceList[displayIndex].uuid.substring(deviceList[displayIndex].uuid.length() - 3));
         }
         else if (displayIndex == deviceCount)
         {
@@ -159,10 +160,10 @@ void showDeviceList(int selectedIndex, int &scrollOffset, bool &checkpointConver
     lastScroll = scrollOffset;
 }
 
-
 void showDeleteConfirmation(const String &deviceName, int index)
 {
-    if (index != lastIndexDelete) {
+    if (index != lastIndexDelete)
+    {
         lastIndexDelete = index;
         lcd.clear();
     }
@@ -174,14 +175,14 @@ void showDeleteConfirmation(const String &deviceName, int index)
     lcd.print(index == 0 ? "> No" : "  No");
 }
 
-
-void showSubmitting(){
+void showSubmitting()
+{
     lcd.setCursor(0, 1);
     lcd.print("Submitting...");
 }
 
-
-void showError(String message){
+void showError(String message)
+{
     lcd.clear();
     lcd.setCursor(0, 1);
     lcd.print(message);

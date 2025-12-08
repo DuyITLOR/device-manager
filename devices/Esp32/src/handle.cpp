@@ -75,7 +75,7 @@ void saveDevice(const String &uuid, const String &nameInput)
     String name = nameInput;
     if (name.length() > 15)
     {
-        name = name.substring(0, 15);
+        name = name.substring(0, 13);
     }
     for (auto &item : deviceList)
     {

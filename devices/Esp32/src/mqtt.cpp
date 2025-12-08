@@ -129,7 +129,6 @@ void sendDeviceId(const String &deviceID)
         StaticJsonDocument<256> doc;
         doc["code"] = code;
         doc["deviceId"] = deviceID;
-        doc["isReturn"] = true;
         String json;
         serializeJson(doc, json);
         Serial.println("[MQTT] Sending devices id to return: " + json);
@@ -165,7 +164,7 @@ void sendReturnRequest(const String &userCode)
 {
     StaticJsonDocument<256> doc;
     doc["code"] = userCode;
-
+    doc["isReturn"] = true;
     JsonArray arr = doc.createNestedArray("devices");
     for (auto &item : deviceList)
     {
