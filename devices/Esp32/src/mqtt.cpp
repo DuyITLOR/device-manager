@@ -164,7 +164,6 @@ void sendReturnRequest(const String &userCode)
 {
     StaticJsonDocument<256> doc;
     doc["code"] = userCode;
-    doc["isReturn"] = true;
     JsonArray arr = doc.createNestedArray("devices");
     for (auto &item : deviceList)
     {

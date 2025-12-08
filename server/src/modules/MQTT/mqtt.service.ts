@@ -194,9 +194,13 @@ export class MqttService implements OnModuleInit {
             this.client.publish(deviceSubmitResponse, 'USER_NOT_FOUND');
             return;
           }
+          const loanRecords = (data.devices || []).map((deviceId: string) => ({
+            deviceId,
+          }));
           const devices = await this.loanService.updateLoan(
             {
-              loanRecords: data.devices,
+              loanRecords,
+              isReturn: true,
             },
             userId,
           );

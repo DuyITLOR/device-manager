@@ -78,7 +78,7 @@ export class LoanService {
   }
 
   async getLoans(query: QueryLoanDto, actorId: string) {
-    const {  search, status, limit = 20, page = 1 } = query;
+    const { search, status, limit = 20, page = 1 } = query;
     const where: Prisma.LoanWhereInput = {};
 
     where.borrowerId = actorId;
@@ -260,7 +260,7 @@ export class LoanService {
     const updatedLoans = await this.prisma.$transaction(
       async (tx) => {
         const results: LoanWithRelations[] = [];
-        
+
         for (const record of dto.loanRecords) {
           const existingLoan = await tx.loan.findFirst({
             where: { deviceId: record.deviceId, status: 'BORROWED' },
@@ -295,11 +295,10 @@ export class LoanService {
               deviceName: existingLoan.device.name,
               userName: existingLoan.borrower.name,
             };
-          }
-          else {
+          } else {
             console.log('Normal update operation detected');
             const diff = generateDiff(existingLoan, updatedData);
-            if(!diff) {
+            if (!diff) {
               results.push(existingLoan);
               continue;
             }
