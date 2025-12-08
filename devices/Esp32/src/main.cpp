@@ -16,12 +16,16 @@ int checkpoint = 0;
 String lastName = "";
 int lastIndex = 0;
 String uid = "";
+unsigned long resetTime = 0;
+int checkpointReset = 0;
+int checkpointStart = 0;
 
 // Đây là biến trước khi xóa
 int selectedIndexDelete = 0;
 bool checkpointConvert = true;
 
 static int scrollOffset = 0;
+
 
 void reset()
 {
@@ -31,7 +35,9 @@ void reset()
     lastName = "";
     lastIndex = 0;
     encoderCount = 0;
-
+    checkpointReset = 0;
+    checkpointStart = 0;
+    deviceList.clear();
     Serial.println("[STATE_1] Exiting to STATE 0");
 }
 
@@ -78,6 +84,25 @@ void loop()
     }
 
     client.loop();
+    uid = readRFID();
+    if (uid == "" && checkpointReset == 0)
+    {
+        resetTime = millis();
+        checkpointReset = 1;
+    }
+    else if (uid != "")
+    {
+        checkpointReset = 0;
+        // Serial.print("[RFID] UID: " + String(uid));
+    }
+
+    if (checkpointReset == 1 && millis() - resetTime > 5000)
+    {
+        Serial.println("[RESET] Inactivity detected. Resetting to STATE 0.");
+        reset();
+    }
+
+
     if (state == 0)
     {
         if (checkpoint == 0)
@@ -88,9 +113,8 @@ void loop()
             Serial.println("[STATE] Initialized LCD");
         }
         Serial.println("[STATE] Waiting for RFID scan...");
-        uid = readRFID();
 
-        if (uid != "" && ready)
+        if (uid != "" && ready && checkpointStart == 0)
         {
             Serial.print("[RFID] UID: " + String(uid));
             sendRFID(uid);
@@ -117,7 +141,7 @@ void loop()
             lastName = receivedName;
         }
 
-        int index = getEncoderValue(0, 2);
+        int index = getEncoderValue(0, 1);
         if (index != -999 && index != lastIndex)
         {
             showUser(receivedName, index);
@@ -129,18 +153,11 @@ void loop()
             while (digitalRead(RE_pinSW) == LOW)
                 ;
             Serial.println("[STATE_1] Button Pressed at index: " + String(lastIndex));
-            if (lastIndex == 2)
-            {
-                reset();
-            }
-            else
-            {
-                state = 2;
-                checkpoint = 0;
-                mode = lastIndex + 1;
-                encoderCount = 0;
-                Serial.println("[STATE_1] Mode: " + String(mode));
-            }
+            state = 2;
+            checkpoint = 0;
+            mode = lastIndex + 1;
+            encoderCount = 0;
+            Serial.println("[STATE_1] Mode: " + String(mode));
         }
     }
     else if (state == 2)
