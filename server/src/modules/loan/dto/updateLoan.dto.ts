@@ -1,10 +1,10 @@
-import { LoanStatus } from "@prisma/client";
 import { Type } from "class-transformer";
-import { ArrayMinSize, IsArray, IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
+import { ArrayMinSize, IsArray, IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class UpdateLoanDto {
+	@IsNotEmpty()
 	@IsString()
-	loanId: string;
+	deviceId: string;
 
 	@IsOptional()
 	@IsString()
@@ -13,10 +13,6 @@ export class UpdateLoanDto {
 	@IsOptional()
 	@IsString()
 	note?: string;
-
-	@IsOptional()
-	@IsEnum(LoanStatus)
-	status?: LoanStatus;
 }
 
 export class UpdateManyLoansDto {
@@ -25,4 +21,8 @@ export class UpdateManyLoansDto {
 	@ValidateNested({ each: true })
 	@Type(() => UpdateLoanDto)
 	loanRecords: UpdateLoanDto[];
+
+	@IsNotEmpty()
+	@IsBoolean()
+	isReturn: boolean;
 }
