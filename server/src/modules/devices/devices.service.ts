@@ -11,6 +11,7 @@ import { DEVICE_MESSAGES } from '../../shared/constants';
 import { updateStatus } from './dto/updateStatus.dto';
 import { QueryDeviceDto } from './dto/queryDevices.dto';
 import { UpdateDevices } from './dto/updateDevices.dto';
+import { LoanService } from '../loan/loan.service';
 
 function throwDeviceError(code: keyof typeof DEVICE_MESSAGES): never {
   const err = DEVICE_MESSAGES[code];
@@ -20,6 +21,7 @@ function throwDeviceError(code: keyof typeof DEVICE_MESSAGES): never {
 @Injectable()
 export class DevicesService {
   private prisma = new PrismaClient();
+  constructor(private readonly loanService: LoanService) {}
 
   private sanitize(device: Device) {
     const { id, name, description, status, createdAt } = device;
@@ -245,5 +247,27 @@ export class DevicesService {
       id: device.id,
       name: device.name,
     };
+  }
+
+  async getDeviceBorrowed(deviceId: string, userId: string) {
+    const device = await this.prisma.device.findFirst({
+      where: {
+        id: deviceId,
+        status: 'BORROWED',
+        isDeleted: false,
+      },
+    });
+
+    if (!device) throwDeviceError('DEVICE_NOT_FOUND');
+    const loan = await this.loanService.getUserBorrowingDevice(deviceId);
+
+    if (!loan) throwDeviceError('DEVICE_NOT_FOUND');
+
+    if (loan.data?.borrowerId === userId) {
+      return {
+        id: device.id,
+        name: device.name,
+      };
+    } else return null;
   }
 }

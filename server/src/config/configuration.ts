@@ -21,8 +21,8 @@ export default () => ({
       deviceCheckReturn: process.env.MQTT_DEVICE_CHECK_RETURN,
       deviceCheckResponse: process.env.MQTT_DEVICE_CHECK_RESPONSE,
 
-      deviceSubmitLoan: process.env.MQTT_DEVICE_LOAN,
-      deviceSubmitReturn: process.env.MQTT_DEVICE_RETURN,
+      deviceSubmitLoan: process.env.MQTT_DEVICE_SUBMIT_LOAN,
+      deviceSubmitReturn: process.env.MQTT_DEVICE_SUBMIT_RETURN,
       deviceSubmitResponse: process.env.MQTT_DEVICE_SUBMIT_RESPONSE,
     },
   },

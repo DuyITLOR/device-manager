@@ -32,7 +32,7 @@ export class MqttService implements OnModuleInit {
       'mqtt.topic.deviceCheckReturn',
     );
     const deviceCheckResponse = this.config.get<string>(
-      'mqtt.topic.deviceResponse',
+      'mqtt.topic.deviceCheckResponse',
     );
 
     const deviceSubmitLoan = this.config.get<string>(
@@ -70,22 +70,22 @@ export class MqttService implements OnModuleInit {
 
       this.client.subscribe(rfidcode, (err: Error | null) => {
         if (err) console.error('Subscribe error:', err);
-        else console.log('[MQTT] Subscribed to rfid/esp32/code');
+        else console.log('[MQTT] Subscribed to ', rfidcode);
       });
 
       this.client.subscribe(deviceCheckLoan, (err: Error | null) => {
         if (err) console.error('Subscribe error:', err);
-        else console.log('[MQTT] Subscribed to device/checkloan');
+        else console.log('[MQTT] Subscribed to ', deviceCheckLoan);
       });
 
       this.client.subscribe(deviceCheckReturn, (err: Error | null) => {
         if (err) console.error('Subscribe error:', err);
-        else console.log('[MQTT] Subscribed to device/checkreturn');
+        else console.log('[MQTT] Subscribed to ', deviceCheckReturn);
       });
 
       this.client.subscribe(deviceSubmitLoan, (err: Error | null) => {
         if (err) console.error('Subscribe error:', err);
-        else console.log('[MQTT] Subscribed to device/loan');
+        else console.log('[MQTT] Subscribed to ', deviceSubmitLoan);
       });
     });
 
@@ -119,6 +119,41 @@ export class MqttService implements OnModuleInit {
           } catch (err) {
             this.client.publish(deviceCheckResponse, 'NOT_FOUND');
             console.error('[MQTT] Device not found', err);
+          }
+        } else if (topic == deviceCheckReturn) {
+          const data = JSON.parse(payload.toString().trim());
+          console.log(
+            '[MQTT] Recieve device return check device return:',
+            data,
+          );
+          try {
+            const userId = await this.userService.getUserIdByCode(data.code);
+            if (!userId) {
+              console.error('[MQTT] User not found for code:', data.code);
+              this.client.publish(deviceCheckResponse, 'USER_NOT_FOUND');
+              return;
+            }
+            const device = await this.deviceService.getDeviceBorrowed(
+              data.deviceId,
+              userId,
+            );
+
+            if (!device) {
+              console.error(
+                '[MQTT] Device not found or not borrowed by user:',
+                data,
+              );
+              this.client.publish(deviceCheckResponse, 'DEVICE_NOT_FOUND');
+              return;
+            }
+            if (device) {
+              device.name = removeAccent(device.name);
+            }
+            this.client.publish(deviceCheckResponse, JSON.stringify(device));
+            console.log('[MQTT] Device found for return:', device);
+          } catch (err) {
+            this.client.publish(deviceCheckResponse, 'NOT_FOUND');
+            console.error('[MQTT] Error checking device return', err);
           }
         } else if (topic == deviceSubmitLoan) {
           const data = JSON.parse(payload.toString().trim());
