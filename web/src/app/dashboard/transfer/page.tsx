@@ -1,27 +1,16 @@
 'use client';
 
 import { Suspense, useEffect, useState, lazy } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Search, QrCode, Package, ArrowLeftRight, Check, X, Loader2, Inbox } from 'lucide-react';
+import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import { TransferRequestDetail } from '@/lib/types/transfer';
 import { fetchAllTransferRequests } from '@/lib/services/transfer';
-import { EmptyTransfers } from '@/components/device/empty-transfer';
-import { TransferCardSkeleton } from '@/components/device/transfer-card-skeleton';
+import { EmptyTransfers } from '@/components/transfer/empty-transfer';
+import { TransferCardSkeleton } from '@/components/transfer/transfer-card-skeleton';
 
-const TransferCard = lazy(() => import('@/components/device/transfer-card'));
+const TransferCard = lazy(() => import('@/components/transfer/transfer-card'));
 
-const MyLoanDevices = () => {
+const MyTransfer = () => {
   const [transferRequests, setTransferRequests] = useState<TransferRequestDetail[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -92,4 +81,4 @@ const MyLoanDevices = () => {
   );
 };
 
-export default MyLoanDevices;
+export default MyTransfer;
