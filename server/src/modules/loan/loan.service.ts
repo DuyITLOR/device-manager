@@ -262,8 +262,8 @@ export class LoanService {
         const results: LoanWithRelations[] = [];
         
         for (const record of dto.loanRecords) {
-          const existingLoan = await tx.loan.findUnique({
-            where: { id: record.loanId, status: 'BORROWED' },
+          const existingLoan = await tx.loan.findFirst({
+            where: { deviceId: record.deviceId, status: 'BORROWED' },
             include: {
               borrower: true,
               device: true,
@@ -276,14 +276,15 @@ export class LoanService {
 
           let actionType: ActivityAction = ActivityAction.LOAN_RETURN;
           let logDetails: any = {};
-          let { loanId, ...updatedData } = record;
+          let { deviceId, ...updatedData } = record;
           let loanUpdateData: Prisma.LoanUpdateInput = { ...updatedData };
           let deviceUpdateData: any = undefined;
 
           // Case 1: Return Operation
-          if (record.status === 'RETURNED' && existingLoan.status === 'BORROWED') {
+          if (dto.isReturn) {
             console.log('Return operation detected');
             loanUpdateData.returnedAt = new Date();
+            loanUpdateData.status = 'RETURNED';
 
             deviceUpdateData = {
               status: 'AVAILABLE',
@@ -295,31 +296,14 @@ export class LoanService {
               userName: existingLoan.borrower.name,
             };
           }
-          // Case 2: Transfer Operation
-          else if (
-            record.borrowerId &&
-            record.borrowerId !== existingLoan.borrowerId
-          ) {
-            console.log('Transfer operation detected');
-            const newBorrower = await tx.user.findUnique({
-              where: { id: record.borrowerId },
-            });
-
-            if (!newBorrower) {
-              throwAppError('USER_NOT_FOUND', USER_MESSAGES.USER_NOT_FOUND);
-            }
-
-            actionType = ActivityAction.TRANSFER_APPROVE;
-            logDetails = {
-              type: 'FLOW',
-              deviceName: existingLoan.device.name,
-              userName: newBorrower.name,
-            };
-          }
-          // Case 3: Update Notes in the Loan record
           else {
             console.log('Normal update operation detected');
             const diff = generateDiff(existingLoan, updatedData);
+            if(!diff) {
+              results.push(existingLoan);
+              continue;
+            }
+
             actionType = ActivityAction.LOAN_UPDATE;
             logDetails = {
               type: 'UPDATE',
@@ -329,7 +313,7 @@ export class LoanService {
 
           // update the loan record
           const updated = await tx.loan.update({
-            where: { id: record.loanId },
+            where: { id: existingLoan.id },
             data: loanUpdateData,
             include: {
               borrower: true,
@@ -348,7 +332,6 @@ export class LoanService {
           // log for loan update
           if (
             actionType === ActivityAction.LOAN_RETURN ||
-            actionType === ActivityAction.TRANSFER_APPROVE ||
             (logDetails.diff && Object.keys(logDetails.diff).length > 0)
           ) {
             await tx.activityLog.create({
@@ -356,14 +339,13 @@ export class LoanService {
                 actorId: actorId,
                 action: actionType,
                 targetType: ActivityTargetType.Loan,
-                targetId: record.loanId,
+                targetId: existingLoan.id,
                 details: logDetails,
               },
             });
           }
           results.push(updated);
         }
-
         return results;
       },
       {
