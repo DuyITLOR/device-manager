@@ -18,3 +18,5 @@ export type TransferCreateResponse = {
     email: string;
   };
 };
+
+export type TransferRequestDetail = TransferCreateResponse;
