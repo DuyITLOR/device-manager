@@ -107,7 +107,7 @@ export class MqttService implements OnModuleInit {
             this.client.publish(nameRespone, JSON.stringify(data));
             console.log('[MQTT] Sent name: ', JSON.stringify(data));
           } catch (err) {
-            this.client.publish(nameRespone || '', 'NOT_FOUND');
+            this.client.publish(nameRespone, 'NOT_FOUND');
             console.error('[MQTT] User not found', err);
           }
         } else if (topic == deviceCheckLoan) {
@@ -179,10 +179,10 @@ export class MqttService implements OnModuleInit {
 
           if (devices.success) {
             console.log('[MQTT] Devices loaned:', devices);
-            this.client.publish(deviceSubmitResponse, 'LOAN_SUCCESS');
+            this.client.publish(deviceSubmitResponse, 'SUCCESS');
           } else {
             console.error('[MQTT] Device loan failed:', devices.message);
-            this.client.publish(deviceSubmitResponse, 'LOAN_FAILED');
+            this.client.publish(deviceSubmitResponse, 'FAILED');
           }
         } else if (topic == deviceSubmitReturn) {
           console.log('[MQTT] vo dc ham return');
@@ -194,6 +194,21 @@ export class MqttService implements OnModuleInit {
             this.client.publish(deviceSubmitResponse, 'USER_NOT_FOUND');
             return;
           }
+          const devices = await this.loanService.updateLoan(
+            {
+              loanRecords: data.devices,
+            },
+            userId,
+          );
+
+          if (devices.success) {
+            console.log('[MQTT] Devices return successfully:', devices);
+            this.client.publish(deviceSubmitResponse, 'SUCCESS');
+          } else {
+            console.error('[MQTT] Device return failed:', devices.message);
+            this.client.publish(deviceSubmitResponse, 'FAILED');
+          }
+
           console.log('[MQTT] Data devices from esp32:', data.devices);
         }
       })().catch((err) => {
