@@ -250,17 +250,29 @@ void loop()
             checkpoint = 1;
 
             showSubmitting();
-            sendLoanRequest(uid);
-            Serial.println("[STATE_4] Preparing MQTT submission");
-            Serial.println("[STATE_4] uuid: " + uid);
+            if (mode == 1) {
+                Serial.println("[STATE_4] Preparing MQTT submission for loan");
+                sendLoanRequest(uid);
+            } else {
+                Serial.println("[STATE_4] Preparing MQTT submission for return");
+                sendReturnRequest(uid);
+            }
         }
-        if (respone) {
+        if (respone == 1) {
             Serial.println("[STATE_4] Submission successful.");
             lcd.clear();
             lcd.setCursor(0, 1);
             lcd.print("  SUBMIT SUCCESS   ");
             delay(2000);
-            respone = false;
+            respone = -1;
+            reset();
+        } else if(respone == 0) {
+            Serial.println("[STATE_4] Failed to Submit and try again...");
+            lcd.clear();
+            lcd.setCursor(0, 1);
+            lcd.print("  SUBMIT FAILED    ");
+            delay(2000);
+            respone = -1;
             reset();
         }
         delay(100);

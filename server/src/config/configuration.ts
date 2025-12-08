@@ -17,11 +17,12 @@ export default () => ({
       rfidcode: process.env.MQTT_RFID_TOPIC,
       nameRespone: process.env.MQTT_NAME_TOPIC,
 
-      deviceRequest: process.env.MQTT_DEVICE_REQUEST,
-      deviceResponse: process.env.MQTT_DEVICE_RESPONSE,
+      deviceCheckLoan: process.env.MQTT_DEVICE_CHECK_LOAN,
+      deviceCheckReturn: process.env.MQTT_DEVICE_CHECK_RETURN,
+      deviceCheckResponse: process.env.MQTT_DEVICE_CHECK_RESPONSE,
 
-      deviceLoan: process.env.MQTT_DEVICE_LOAN,
-      deviceReturn: process.env.MQTT_DEVICE_RETURN,
+      deviceSubmitLoan: process.env.MQTT_DEVICE_SUBMIT_LOAN,
+      deviceSubmitReturn: process.env.MQTT_DEVICE_SUBMIT_RETURN,
       deviceSubmitResponse: process.env.MQTT_DEVICE_SUBMIT_RESPONSE,
     },
   },
