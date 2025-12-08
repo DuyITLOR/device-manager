@@ -1,16 +1,12 @@
 import { Transform, Type } from 'class-transformer';
 import {
-	IsString, IsNotEmpty,
+	IsString,
 	IsOptional,
 	Min, IsInt,
 	Max
 } from 'class-validator';
 
 export class GetTransferRequestsDto {
-	@IsString()
-	@IsNotEmpty()
-	fromUserId: string; // ID of the user who is in possesion of the device
-
 	@IsOptional()
 	@Transform(({value} : {value: unknown}) => 
 		typeof value === 'string' ? decodeURIComponent(value) : undefined,

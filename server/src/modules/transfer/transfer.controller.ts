@@ -19,8 +19,8 @@ export class TransferController {
   constructor(private readonly transferService: TransferService) {}
 
   @Get()
-  async getTransferRequests(@Query() query: GetTransferRequestsDto) {
-    return this.transferService.getTransferRequests(query);
+  async getTransferRequests(@Query() query: GetTransferRequestsDto, @CurrentUser() me: { id: string, role: Role }) {
+    return this.transferService.getTransferRequests(query, me.id);
   }
 
   @Roles(ROLES.MANAGER, ROLES.USER)

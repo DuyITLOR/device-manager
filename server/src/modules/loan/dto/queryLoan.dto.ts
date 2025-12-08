@@ -14,10 +14,6 @@ import { Type, Transform } from 'class-transformer';
 import { LoanStatus } from '@prisma/client';
 
 export class QueryLoanDto {
-  @IsString()
-  @IsNotEmpty()
-  borrowerId: string;
-
 	@IsOptional()
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? decodeURIComponent(value) : undefined,

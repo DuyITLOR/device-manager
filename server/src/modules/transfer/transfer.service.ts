@@ -67,11 +67,11 @@ export class TransferService {
   }
 
   // transfer requests from A to B, so A (fromUserId) needs to approve the requests.
-  async getTransferRequests(query: GetTransferRequestsDto) {
-    const { fromUserId, search, limit = 20, page = 1 } = query;
+  async getTransferRequests(query: GetTransferRequestsDto, actorId: string) {
+    const { search, limit = 20, page = 1 } = query;
     const where: Prisma.TransferWhereInput = {};
 
-    where.fromUserId = fromUserId;
+    where.fromUserId = actorId;
     if (search) {
       where.OR = [
         {
