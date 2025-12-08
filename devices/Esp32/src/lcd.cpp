@@ -70,10 +70,6 @@ void showUser(String name, int index = 0)
     {
         lcd.setCursor(14, 2);
     }
-    else
-    {
-        lcd.setCursor(8, 3);
-    }
 
     lcd.write(0);
 
@@ -85,9 +81,6 @@ void showUser(String name, int index = 0)
 
     lcd.setCursor(15, 2);
     lcd.print("TRA");
-
-    lcd.setCursor(9, 3);
-    lcd.print("EXIT");
 }
 
 
