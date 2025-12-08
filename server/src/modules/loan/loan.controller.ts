@@ -19,8 +19,11 @@ export class LoanController {
   constructor(private readonly loanService: LoanService) {}
 
   @Get()
-  async getLoans(@Query() query: QueryLoanDto) {
-    return this.loanService.getLoans(query);
+  async getLoans(
+    @Query() query: QueryLoanDto,
+    @CurrentUser() me: { id: string; role: Role },
+  ) {
+    return this.loanService.getLoans(query, me.id);
   }
 
   @Get('device/:deviceId/borrower')

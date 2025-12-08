@@ -77,11 +77,11 @@ export class LoanService {
     };
   }
 
-  async getLoans(query: QueryLoanDto) {
-    const { borrowerId, search, status, limit = 20, page = 1 } = query;
+  async getLoans(query: QueryLoanDto, actorId: string) {
+    const {  search, status, limit = 20, page = 1 } = query;
     const where: Prisma.LoanWhereInput = {};
 
-    where.borrowerId = borrowerId;
+    where.borrowerId = actorId;
     if (status) {
       where.status = status;
     }
