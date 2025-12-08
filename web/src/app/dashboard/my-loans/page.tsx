@@ -70,37 +70,16 @@ const MyLoanDevices = () => {
     <div className='space-y-6'>
       {/* Header */}
       <div>
-        <h1 className='text-3xl font-bold gradient-text'>My Loan Devices</h1>
-        <p className='text-muted-foreground mt-1'>Manage your borrowed equipment</p>
+        <h1 className='text-3xl font-bold gradient-text'>Thiết bị đã mượn</h1>
+        <p className='text-muted-foreground mt-1'>Quản lý thiết bị bạn đã mượn</p>
       </div>
-
-      {/* Search Bar */}
-      <Card className='glass-card'>
-        <CardContent className='pt-6'>
-          <div className='flex gap-3'>
-            <div className='relative flex-1'>
-              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
-              <Input
-                placeholder='Search devices...'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className='pl-10'
-              />
-            </div>
-            <Button className='flex-shrink-0'>
-              <QrCode className='w-4 h-4 mr-2' />
-              Scan QR
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Pending Transfers */}
       {pendingDevices.length > 0 && (
         <div className='space-y-4'>
           <h2 className='text-xl font-semibold flex items-center gap-2'>
             <ArrowLeftRight className='w-5 h-5 text-primary' />
-            Pending Transfers
+            Yêu cầu chuyển thiết bị
           </h2>
           <div className='grid gap-4'>
             {pendingDevices.map((device) => (
@@ -114,17 +93,17 @@ const MyLoanDevices = () => {
                       <div>
                         <h3 className='font-semibold text-lg'>{device.name}</h3>
                         <p className='text-sm text-muted-foreground'>{device.serialNumber}</p>
-                        <p className='text-sm text-primary mt-1'>Transfer from: {device.from}</p>
+                        <p className='text-sm text-primary mt-1'>Chuyển từ: {device.from}</p>
                       </div>
                     </div>
                     <div className='flex gap-2'>
                       <Button size='sm' variant='default'>
                         <Check className='w-4 h-4 mr-1' />
-                        Accept
+                        Chấp nhận
                       </Button>
                       <Button size='sm' variant='outline' className='glass-button'>
                         <X className='w-4 h-4 mr-1' />
-                        Reject
+                        Từ chối
                       </Button>
                     </div>
                   </div>
@@ -135,9 +114,8 @@ const MyLoanDevices = () => {
         </div>
       )}
 
-      {/* Active Devices */}
       <div className='space-y-4'>
-        <h2 className='text-xl font-semibold'>My Equipment</h2>
+        <h2 className='text-xl font-semibold'>Thiết bị đã mượn</h2>
         <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-4'>
           {activeDevices.map((device) => (
             <Card

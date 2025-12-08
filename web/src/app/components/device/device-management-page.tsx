@@ -20,6 +20,7 @@ import EditDeviceDialog from '@/components/device/edit-device-dialog';
 import { exportQrPdf } from '@/lib/services/qr';
 import { QRScannerDialog } from '@/components/device/qr-scanner-dialog';
 import { DeviceDetailDialog } from '@/components/device/device-detail-dialog';
+import { createTransferRequest } from '@/lib/services/transfer';
 
 interface FilterFormData {
   name: string;
@@ -49,6 +50,7 @@ const DeviceManagementPage = () => {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
 
   const [hasManagement, setHasManagement] = useState<boolean>(false);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   useEffect(() => {
     const role = getRole();
@@ -214,6 +216,24 @@ const DeviceManagementPage = () => {
     }
   }, [searchParams, curPage, toast]);
 
+  const handleTransferDevice = async () => {
+    if (!scannedDevice) return;
+    setIsTransferring(true);
+    try {
+      const request = await createTransferRequest(scannedDevice.id);
+      toast({
+        title: 'Yêu cầu chuyển thiết bị thành công',
+        description: `Yêu cầu chuyển thiết bị đã được tạo với mã #${request.id}`,
+      });
+      setDetailDialogOpen(false);
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi tạo yêu cầu chuyển thiết bị';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
   useEffect(() => {
     loadDevices();
   }, [loadDevices]);
@@ -324,7 +344,13 @@ const DeviceManagementPage = () => {
         />
 
         {/* Device Detail Dialog - Shows after QR scan */}
-        <DeviceDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} device={scannedDevice} />
+        <DeviceDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          device={scannedDevice}
+          onClickTransfer={handleTransferDevice}
+          isTransferring={isTransferring}
+        />
       </div>
     </div>
   );
