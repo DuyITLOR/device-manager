@@ -30,9 +30,18 @@ export function getRole(): string | null {
   return localStorage.getItem('userRole');
 }
 
+export function saveUserId(userId: string) {
+  localStorage.setItem('userId', userId);
+}
+
+export function getUserId(): string | null {
+  return localStorage.getItem('userId');
+}
+
 export function clearUserInfo() {
   localStorage.removeItem('userName');
   localStorage.removeItem('userRole');
+  localStorage.removeItem('userId');
   clearToken();
 }
 
