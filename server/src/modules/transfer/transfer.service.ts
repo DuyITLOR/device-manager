@@ -68,7 +68,7 @@ export class TransferService {
 
   // transfer requests from A to B, so A (fromUserId) needs to approve the requests.
   async getTransferRequests(query: GetTransferRequestsDto, actorId: string) {
-    const { search, limit = 20, page = 1 } = query;
+    const { search } = query;
     const where: Prisma.TransferWhereInput = {};
 
     where.fromUserId = actorId;
@@ -96,7 +96,7 @@ export class TransferService {
     }
     where.status = 'PENDING';
 
-    const [data, total] = await this.prisma.$transaction([
+    const [data] = await this.prisma.$transaction([
       this.prisma.transfer.findMany({
         where,
         orderBy: [{ requestedAt: 'desc' }],
@@ -107,8 +107,6 @@ export class TransferService {
           fromUser: true,
           toUser: true,
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
       this.prisma.transfer.count({ where }),
     ]);
@@ -117,13 +115,6 @@ export class TransferService {
       status: TRANSFER_MESSAGES.TRANSFER_REQUESTS_FETCH_SUCCESS.status,
       success: true,
       message: TRANSFER_MESSAGES.TRANSFER_REQUESTS_FETCH_SUCCESS.message,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasMore: page < Math.ceil(total / limit),
-      },
       data: data.map((transfer) => this.sanitize(transfer)),
     };
   }
@@ -138,7 +129,7 @@ export class TransferService {
       include: {
         device: true,
       },
-    })
+    });
 
     if (!loan) {
       throwAppError('LOAN_NOT_FOUND', LOAN_MESSAGES.LOAN_NOT_FOUND);
@@ -302,7 +293,7 @@ export class TransferService {
           action: actionType,
           targetType: ActivityTargetType.Transfer,
           targetId: transfer.id,
-          details: logDetails as any,
+          details: logDetails,
         };
 
         await tx.activityLog.create({ data: logData as any });

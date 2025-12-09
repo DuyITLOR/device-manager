@@ -19,7 +19,8 @@ import CreateDeviceDialog from '@/components/device/create-device-dialog';
 import EditDeviceDialog from '@/components/device/edit-device-dialog';
 import { exportQrPdf } from '@/lib/services/qr';
 import { QRScannerDialog } from '@/components/device/qr-scanner-dialog';
-import { DeviceDetailDialog } from '@/components/device/device-detail-dialog';
+import DeviceDetailDialog from '@/components/device/device-detail-dialog';
+import { createTransferRequest } from '@/lib/services/transfer';
 
 interface FilterFormData {
   name: string;
@@ -49,6 +50,7 @@ const DeviceManagementPage = () => {
   const [selectedDevices, setSelectedDevices] = useState<string[]>([]);
 
   const [hasManagement, setHasManagement] = useState<boolean>(false);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   useEffect(() => {
     const role = getRole();
@@ -214,22 +216,39 @@ const DeviceManagementPage = () => {
     }
   }, [searchParams, curPage, toast]);
 
+  const handleTransferDevice = async () => {
+    if (!scannedDevice) return;
+    setIsTransferring(true);
+    try {
+      const request = await createTransferRequest(scannedDevice.id);
+      toast({
+        title: 'Yêu cầu chuyển thiết bị thành công',
+        description: `Yêu cầu chuyển thiết bị đã được tạo với mã #${request.id}`,
+      });
+      setDetailDialogOpen(false);
+    } catch (err: any) {
+      const msg = err?.message ?? 'Lỗi khi tạo yêu cầu chuyển thiết bị';
+      toast({ title: 'Lỗi', description: msg, variant: 'destructive' });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
   useEffect(() => {
     loadDevices();
   }, [loadDevices]);
   return (
-    <div className='min-h-screen p-4 md:p-8'>
+    <div className='space-y-6'>
+      <div>
+        <h1 className='text-3xl font-bold gradient-text'>Quản lý thiết bị</h1>
+        <p className='text-muted-foreground mt-1'>Quản lý tất cả các thiết bị trong hệ thống</p>
+      </div>
       <div className='max-w-7xl mx-auto space-y-6'>
         <Card className='glass-card'>
           <CardHeader>
             {hasManagement && (
-              <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4'>
-                <div>
-                  <CardTitle className='text-2xl'>Quản lý thiết bị</CardTitle>
-                  <CardDescription className='mt-1'>Thêm, chỉnh sửa và quản lý tất cả thiết bị</CardDescription>
-                </div>
+              <div className='flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-4'>
                 <div className='flex flex-col md:flex-row gap-2'>
-                  {/* QR Scanner Button - Always visible */}
                   <QRScannerDialog onScanSuccess={handleQRScanSuccess} />
 
                   {isExporting ? (
@@ -259,15 +278,8 @@ const DeviceManagementPage = () => {
             )}
 
             {!hasManagement && (
-              <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4'>
-                <div>
-                  <CardTitle className='text-2xl'>Tất cả thiết bị</CardTitle>
-                  <CardDescription className='mt-1'>Tìm kiếm các thiết bị có sẵn trong hệ thống</CardDescription>
-                </div>
-                <div className='flex gap-2'>
-                  {/* QR Scanner Button for regular users */}
-                  <QRScannerDialog onScanSuccess={handleQRScanSuccess} />
-                </div>
+              <div className='flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-4'>
+                <QRScannerDialog onScanSuccess={handleQRScanSuccess} />
               </div>
             )}
 
@@ -323,8 +335,13 @@ const DeviceManagementPage = () => {
           }}
         />
 
-        {/* Device Detail Dialog - Shows after QR scan */}
-        <DeviceDetailDialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen} device={scannedDevice} />
+        <DeviceDetailDialog
+          open={detailDialogOpen}
+          onOpenChange={setDetailDialogOpen}
+          device={scannedDevice}
+          onClickTransfer={handleTransferDevice}
+          isTransferring={isTransferring}
+        />
       </div>
     </div>
   );
