@@ -6,6 +6,8 @@ import {
   ActivityTargetType,
   ActivityAction,
 } from '@prisma/client';
+import * as fs from 'fs';
+import * as path from 'path';
 import { CreateDevicesDto } from '../devices/dto/createDevices.dto';
 import { DEVICE_MESSAGES } from '../../shared/constants';
 import { updateStatus } from './dto/updateStatus.dto';
@@ -22,6 +24,88 @@ function throwDeviceError(code: keyof typeof DEVICE_MESSAGES): never {
 export class DevicesService {
   private prisma = new PrismaClient();
   constructor(private readonly loanService: LoanService) {}
+  private devicesFile = path.join(__dirname, '..', '..', 'data', 'devices.txt');
+  private resolvedDevicesFile: string | null = null;
+
+  private ensureDevicesFileExists() {
+    try {
+      const dir = path.dirname(this.devicesFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      if (!fs.existsSync(this.devicesFile)) {
+        fs.writeFileSync(this.devicesFile, '', { encoding: 'utf8' });
+      }
+    } catch (err) {
+      console.error('ensureDevicesFileExists error', err);
+    }
+  }
+  private upsertDeviceNameInTxtSync(newName: string) {
+    try {
+      if (!newName) return;
+      this.ensureDevicesFileExists();
+      const devicesFile = this.devicesFile;
+      const content = fs.readFileSync(devicesFile, 'utf8');
+      const lines = content
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      const normalized = newName.trim();
+      if (!lines.includes(normalized)) {
+        lines.push(normalized);
+        fs.writeFileSync(devicesFile, lines.join('\n') + '\n', {
+          encoding: 'utf8',
+        });
+        console.log(
+          `[DevicesService] upserted device name "${normalized}" into ${devicesFile}`,
+        );
+      }
+    } catch (err) {
+      console.error('upsertDeviceNameInTxtSync error', err);
+    }
+  }
+
+  private async removeDeviceNameIfNoMore(oldName: string) {
+    try {
+      if (!oldName) return;
+      const name = oldName.trim();
+      const count = await this.prisma.device.count({
+        where: {
+          name: name,
+          isDeleted: false,
+        },
+      });
+
+      if (count > 0) {
+        console.log(
+          `[DevicesService] keep name "${name}" in file (count=${count})`,
+        );
+        return;
+      }
+
+      this.ensureDevicesFileExists();
+      const devicesFile = this.devicesFile;
+      const content = fs.readFileSync(devicesFile, 'utf8');
+      const lines = content
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const filtered = lines.filter((l) => l !== name);
+      fs.writeFileSync(
+        devicesFile,
+        filtered.join('\n') + (filtered.length ? '\n' : ''),
+        {
+          encoding: 'utf8',
+        },
+      );
+      console.log(
+        `[DevicesService] removed device name "${name}" from ${devicesFile}`,
+      );
+    } catch (err) {
+      console.error('removeDeviceNameIfNoMore error', err);
+    }
+  }
 
   private sanitize(device: Device) {
     const { id, name, description, status, createdAt } = device;
@@ -50,6 +134,8 @@ export class DevicesService {
         status: dto.status,
       },
     });
+    console.log('File path: ', this.devicesFile);
+    this.upsertDeviceNameInTxtSync(device.name);
 
     await this.prisma.activityLog.create({
       data: {
@@ -135,10 +221,11 @@ export class DevicesService {
   async delete(id: string, actorId: string) {
     await this.findById(id);
 
-    await this.prisma.device.update({
+    const device = await this.prisma.device.update({
       where: { id },
       data: { isDeleted: true },
     });
+    await this.removeDeviceNameIfNoMore(device.name);
 
     await this.prisma.activityLog.create({
       data: {
@@ -206,7 +293,7 @@ export class DevicesService {
   }
 
   async updateInfor(id: string, dto: UpdateDevices, actorId: string) {
-    await this.findById(id);
+    const oldDevice = await this.findById(id);
 
     const updated = await this.prisma.device.update({
       where: { id },
@@ -223,6 +310,11 @@ export class DevicesService {
         targetId: id,
       },
     });
+
+    if (dto.name && dto.name !== oldDevice.name) {
+      this.upsertDeviceNameInTxtSync(dto.name);
+      await this.removeDeviceNameIfNoMore(oldDevice.name);
+    }
 
     return {
       status: DEVICE_MESSAGES.DEVICE_UPDATE_SUCCESS.status,
