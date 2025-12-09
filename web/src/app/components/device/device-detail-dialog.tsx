@@ -1,4 +1,3 @@
-// components/device/device-detail-dialog.tsx
 'use client';
 
 import {
@@ -13,15 +12,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { DEVICE_STATUS_MAP, DEVICE_STATUS_VARIANTS } from '@/lib/mapper/deviceStatus';
 import type { Device } from '@/lib/types/device';
+import { Loader2 } from 'lucide-react';
+import { getUserId } from '@/lib/utils/auth';
 
 interface DeviceDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   device: Device | null;
+  onClickTransfer?: () => void;
+  isTransferring?: boolean;
 }
 
-export function DeviceDetailDialog({ open, onOpenChange, device }: DeviceDetailDialogProps) {
+export default function DeviceDetailDialog({
+  open,
+  onOpenChange,
+  device,
+  onClickTransfer,
+  isTransferring,
+}: DeviceDetailDialogProps) {
   if (!device) return null;
+  const currentUserId = getUserId();
+  const isDisableTransferButton = device.status !== 'BORROWED' || device.borrowerId === currentUserId || isTransferring;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,10 +67,13 @@ export function DeviceDetailDialog({ open, onOpenChange, device }: DeviceDetailD
         </div>
 
         <DialogFooter>
-          <Button variant='outline' onClick={() => onOpenChange(false)}>
+          <Button variant='outline' onClick={() => onOpenChange(false)} disabled={isTransferring}>
             Đóng
           </Button>
-          {device.status == 'BORROWED' && <Button>Chuyển sang tôi</Button>}
+          <Button disabled={isDisableTransferButton} onClick={onClickTransfer}>
+            {isTransferring && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+            {isTransferring ? 'Đang chuyển...' : 'Chuyển sang tôi'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

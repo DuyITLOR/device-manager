@@ -177,6 +177,7 @@ export class DevicesService {
         data: {
           ...device,
           borrowerName: borrower?.borrower.name,
+          borrowerId: borrower?.borrower.id,
         },
       };
     }

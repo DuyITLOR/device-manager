@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import { signin } from '@/lib/services/auth';
-import { getRole, saveName, saveRole, saveToken } from '@/lib/utils/auth';
+import { getRole, saveName, saveRole, saveToken, saveUserId } from '@/lib/utils/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Package } from 'lucide-react';
 
@@ -36,6 +36,7 @@ const Login = () => {
       saveToken(res.data.accessToken);
       saveName(res.data.user.name);
       saveRole(res.data.user.role);
+      saveUserId(res.data.user.id);
 
       handleNavigation();
 
