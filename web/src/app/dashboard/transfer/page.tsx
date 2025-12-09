@@ -4,31 +4,85 @@ import { Suspense, useEffect, useState, lazy } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeftRight, Loader2 } from 'lucide-react';
 import { TransferRequestDetail } from '@/lib/types/transfer';
-import { fetchAllTransferRequests } from '@/lib/services/transfer';
+import { fetchAllTransferRequests, updateStatusTransferRequest } from '@/lib/services/transfer';
 import { EmptyTransfers } from '@/components/transfer/empty-transfer';
 import { TransferCardSkeleton } from '@/components/transfer/transfer-card-skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 const TransferCard = lazy(() => import('@/components/transfer/transfer-card'));
 
 const MyTransfer = () => {
+  const { toast } = useToast();
   const [transferRequests, setTransferRequests] = useState<TransferRequestDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const loadTransferRequests = async () => {
+    setLoading(true);
+    try {
+      const response = await fetchAllTransferRequests();
+      setTransferRequests(response);
+    } catch (error) {
+      console.error('Error fetching transfer requests:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải danh sách yêu cầu chuyển',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTransferRequests = async () => {
-      setLoading(true);
-      try {
-        const response = await fetchAllTransferRequests();
-        setTransferRequests(response);
-      } catch (error) {
-        console.error('Error fetching transfer requests:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTransferRequests();
+    loadTransferRequests();
   }, []);
+
+  const handleApprove = async (transferId: string) => {
+    setProcessingId(transferId);
+    try {
+      await updateStatusTransferRequest('APPROVED', transferId);
+
+      toast({
+        title: 'Thành công',
+        description: 'Đã chấp nhận yêu cầu chuyển thiết bị',
+        variant: 'success',
+      });
+
+      await loadTransferRequests();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error?.message || 'Không thể chấp nhận yêu cầu',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (transferId: string) => {
+    setProcessingId(transferId);
+    try {
+      await updateStatusTransferRequest('REJECTED', transferId);
+
+      toast({
+        title: 'Đã từ chối',
+        description: 'Đã từ chối yêu cầu chuyển thiết bị',
+        variant: 'success',
+      });
+
+      await loadTransferRequests();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error?.message || 'Không thể từ chối yêu cầu',
+        variant: 'destructive',
+      });
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   return (
     <div className='space-y-6'>
@@ -71,7 +125,13 @@ const MyTransfer = () => {
               }
             >
               {transferRequests.map((transfer: TransferRequestDetail) => (
-                <TransferCard key={transfer.id} transfer={transfer} />
+                <TransferCard
+                  key={transfer.id}
+                  transfer={transfer}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  isProcessing={processingId === transfer.id}
+                />
               ))}
             </Suspense>
           </div>

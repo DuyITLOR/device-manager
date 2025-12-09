@@ -1,15 +1,16 @@
-import React from 'react';
 import { Card, CardContent } from '../ui/card';
-import { Check, Package, X } from 'lucide-react';
+import { Check, Loader2, Package, X } from 'lucide-react';
 import { Button } from '../ui/button';
-import type { Device } from '@/lib/types/device';
 import { TransferRequestDetail } from '@/lib/types/transfer';
 
 interface TransferCardProps {
   transfer: TransferRequestDetail;
+  onApprove?: (transferId: string) => void;
+  onReject?: (transferId: string) => void;
+  isProcessing?: boolean;
 }
 
-const TransferCard = ({ transfer }: TransferCardProps) => {
+const TransferCard = ({ transfer, onApprove, onReject, isProcessing = false }: TransferCardProps) => {
   return (
     <Card key={transfer.id} className='glass-card border-primary/50'>
       <CardContent className='pt-6'>
@@ -24,11 +25,17 @@ const TransferCard = ({ transfer }: TransferCardProps) => {
             </div>
           </div>
           <div className='flex gap-2'>
-            <Button size='sm' variant='default'>
-              <Check className='w-4 h-4 mr-1' />
+            <Button size='sm' variant='default' onClick={() => onApprove?.(transfer.id)} disabled={isProcessing}>
+              {isProcessing ? <Loader2 className='w-4 h-4 mr-1 animate-spin' /> : <Check className='w-4 h-4 mr-1' />}
               Chấp nhận
             </Button>
-            <Button size='sm' variant='outline' className='glass-button'>
+            <Button
+              size='sm'
+              variant='outline'
+              className='glass-button'
+              onClick={() => onReject?.(transfer.id)}
+              disabled={isProcessing}
+            >
               <X className='w-4 h-4 mr-1' />
               Từ chối
             </Button>
