@@ -3,6 +3,9 @@ export default () => ({
     port: parseInt(process.env.PORT ?? '5050', 10),
     env: process.env.NODE_ENV,
   },
+  apikey: {
+    key: process.env.GEMINI_API_KEY,
+  },
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,

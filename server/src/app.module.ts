@@ -13,6 +13,7 @@ import { LoanModule } from './modules/loan/loan.module';
 import { TransferModule } from './modules/transfer/transfer.module';
 import { MqttModule } from './modules/MQTT/mqtt.module';
 import { QrModule } from './modules/qr/qr.module';
+import { LlmModule } from './modules/llm/llm.module';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/role.guard';
@@ -36,6 +37,7 @@ import { HealthModule } from './modules/health/health.module';
     QrModule,
     HealthModule,
     MqttModule,
+    LlmModule
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
