@@ -27,9 +27,9 @@ void setup()
 
   WiFi.mode(WIFI_STA);
   // WiFi.begin("THREE O'CLOCK", "3open24h");
-  //WiFi.begin("i680", "RoboticsLab@1!");
-  uint8_t routerBSSID[] = {0x40, 0xE3, 0xD6, 0xC3, 0x0D, 0xC4}; // BSSID của AP ESP32 chính
-  WiFi.begin("THREE O'CLOCK", "3open24h", 6, routerBSSID);
+  WiFi.begin("i680", "RoboticsLab@1!");
+  // uint8_t routerBSSID[] = {0x40, 0xE3, 0xD6, 0xC3, 0x0D, 0xC4}; // BSSID của AP ESP32 chính
+  // WiFi.begin("THREE O'CLOCK", "3open24h", 6, routerBSSID);
   Serial.print("[WiFi] Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -79,6 +79,7 @@ void setup()
 
 void loop()
 {
+  digitalWrite(led, HIGH);
   if (reader.receiveQrCode(&qrCodeData, 300))
   {
     if (qrCodeData.valid)

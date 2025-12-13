@@ -4,7 +4,7 @@ export default () => ({
     env: process.env.NODE_ENV,
   },
   apikey: {
-    key: process.env.API_KEY,
+    key: process.env.GEMINI_API_KEY,
   },
   jwt: {
     secret: process.env.JWT_SECRET,
