@@ -185,6 +185,7 @@ QUY TẮC SUY LUẬN NGỮ NGHĨA:
 
 5. Nếu KHÔNG tìm được thiết bị phù hợp:
    → Trả về mảng rỗng [].
+6. Xử lý các trường hợp đồng nghĩa, viết tắt, lỗi chính tả nhẹ, viết dư ("ví dụ: tua vít và vít).
 `;
 
     const outputFormat = `
@@ -288,31 +289,56 @@ YÊU CẦU NGƯỜI DÙNG:
     available: { item: string; quantity: number }[],
   ): string {
     return `
-    Bạn là trợ lý kỹ thuật cho phòng Lab IoT.
+    Bạn là thủ kho của phòng Lab IoT. Hãy báo cáo tình trạng thiết bị cho user.
+
+    DỮ LIỆU:
+    - Yêu cầu (Request): ${JSON.stringify(requested)}
+    - Trong kho (Stock): ${JSON.stringify(available)}
 
     NHIỆM VỤ:
-    - So sánh yêu cầu người dùng với số lượng thiết bị HIỆN CÓ trong kho
-    - Trả lời NGẮN GỌN, RÕ RÀNG, DỄ HIỂU cho người dùng
-    - KHÔNG bịa số
-    - CHỈ dùng dữ liệu được cung cấp
+    Dựa vào "quantity" trong Request để quyết định cách trả lời:
 
-    CÂU HỎI NGƯỜI DÙNG:
-    "${question}"
+    LOGIC 1: CHẾ ĐỘ TRA CỨU (Khi quantity = 0)
+    - Ý nghĩa: User hỏi "còn bao nhiêu", "có những loại nào".
+    - Hành động:
+      1. Gom nhóm các thiết bị cùng loại (ví dụ: các loại "Máy chiếu").
+      2. Báo cáo TỔNG số lượng hiện có.
+      3. Liệt kê chi tiết tên từng dòng máy và số lượng của nó.
+      4. KHÔNG báo "Đủ" hay "Thiếu".
 
-    DANH SÁCH THIẾT BỊ NGƯỜI DÙNG YÊU CẦU:
-    ${JSON.stringify(requested, null, 2)}
+    LOGIC 2: CHẾ ĐỘ MƯỢN/KIỂM TRA (Khi quantity > 0)
+    - Ý nghĩa: User nói rõ "lấy 5 cái", "cần 2 cái".
+    - Hành động:
+      1. Tính tổng tồn kho của loại thiết bị đó.
+      2. So sánh Tổng Tồn Kho vs Số Lượng Yêu Cầu.
+      3. Trả về kết quả:
+         - ✅ ĐỦ: Nếu Tổng Tồn >= Yêu Cầu.
+         - ⚠️ THIẾU: Nếu Tổng Tồn < Yêu Cầu (Ghi rõ: Cần A nhưng chỉ còn B).
+         - ❌ HẾT: Nếu Tổng Tồn = 0.
 
-    SỐ LƯỢNG THIẾT BỊ HIỆN CÓ TRONG KHO:
-    ${JSON.stringify(available, null, 2)}
+    QUY TẮC HIỂN THỊ (HTML):
+    - Sử dụng thẻ <ul>, <li>, <b> để trình bày gọn gàng.
+    - Với các thiết bị có nhiều phiên bản (như máy chiếu, mạch), hãy gom vào một mục lớn.
+    
+    VÍ DỤ OUTPUT MONG MUỐN (HTML):
+    
+    [Trường hợp Tra cứu - quantity = 0]
+    <ul>
+      <li><b>Máy chiếu</b>: Hiện còn tổng <b>15 cái</b>. Gồm:
+         <ul>
+            <li>Epson EB-X05: 5 cái</li>
+            <li>Sony VPL: 10 cái</li>
+         </ul>
+      </li>
+      <li><b>Vít</b>: Hiện còn 20 cái.</li>
+    </ul>
 
-    QUY TẮC TRẢ LỜI:
-    1. Nếu số lượng hiện có >= số lượng yêu cầu → nói là ĐỦ
-    2. Nếu thiếu → nói rõ THIẾU BAO NHIÊU
-    3. Nếu không có thiết bị nào → nói là KHÔNG CÓ
-    4. Câu trả lời dưới định dạng HTML giùm tui để FRONTEND dễ hiển thị
-    5. KHÔNG JSON, KHÔNG markdown
+    [Trường hợp Mượn - quantity = 5]
+    <ul>
+       <li><b>Máy chiếu</b>: ✅ <b>ĐỦ</b> (Kho còn 15 cái, sẵn sàng cho mượn).</li>
+    </ul>
 
-    BẮT ĐẦU TRẢ LỜI:
+    HÃY TRẢ LỜI CÂU HỎI SAU CỦA USER: "${question}"
     `;
   }
 }
