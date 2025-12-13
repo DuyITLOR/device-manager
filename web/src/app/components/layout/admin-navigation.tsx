@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Package, Users, History } from 'lucide-react';
+import { Package, Users, History, Bot } from 'lucide-react';
 import AccountDropdown from '../user/account-dropdown';
 import ChangePasswordDialog from '../user/change-password-dialog';
 import { clearUserInfo, getName, getRole } from '@/lib/utils/auth';
@@ -54,6 +54,19 @@ export default function AdminNavigation() {
             <div className='flex items-center gap-2'>
               <Users className='w-4 h-4' />
               <span>Người dùng</span>
+            </div>
+          </Link>
+          <Link
+            href='/admin/chatbot'
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              pathname === '/admin/chatbot'
+                ? 'bg-primary text-primary-foreground shadow-lg'
+                : 'hover:bg-muted text-muted-foreground'
+            }`}
+          >
+            <div className='flex items-center gap-2'>
+              <Bot className='w-4 h-4' />
+              <span>Trợ lý ảo</span>
             </div>
           </Link>
           <Link

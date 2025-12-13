@@ -1,6 +1,6 @@
 'use client';
 import { clearUserInfo, getName, getRole } from '@/lib/utils/auth';
-import { Package, List } from 'lucide-react';
+import { Package, List, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import AccountDropdown from '../user/account-dropdown';
@@ -66,6 +66,19 @@ export default function UserNavigation() {
             <div className='flex items-center gap-2'>
               <Package className='w-4 h-4' />
               <span>Thiết bị đã mượn</span>
+            </div>
+          </Link>
+          <Link
+            href='/dashboard/chatbot'
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              pathname === '/dashboard/chatbot'
+                ? 'bg-primary text-primary-foreground shadow-lg'
+                : 'hover:bg-muted text-muted-foreground'
+            }`}
+          >
+            <div className='flex items-center gap-2'>
+              <Bot className='w-4 h-4' />
+              <span>Trợ lý ảo</span>
             </div>
           </Link>
         </div>
