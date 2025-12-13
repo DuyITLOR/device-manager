@@ -5,11 +5,12 @@ import * as path from 'path';
 import { HttpException } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import { Logger } from '@nestjs/common';
-
+import { PrismaClient } from '@prisma/client';
 @Injectable()
 export class LlmService implements OnModuleInit {
   private aiClient: any = null;
   private readonly logger = new Logger(LlmService.name);
+  private prisma = new PrismaClient();
   constructor(private readonly config: ConfigService) {}
 
   onModuleInit() {
@@ -26,15 +27,31 @@ export class LlmService implements OnModuleInit {
 
     const deviceList = this.loadDeviceDatabase();
 
-    const prompt = this.systemPrompt(deviceList, sanitizedQuestion);
+    const firstPrompt = this.systemFirstPrompt(deviceList, sanitizedQuestion);
 
-    const response = await this.callLLM(prompt, {
+    const firstResponse = await this.callLLM(firstPrompt, {
       model: 'gemini-2.5-flash',
       responseMimeType: 'application/json',
       maxOutputTokens: 1000,
     });
 
-    return response;
+    const dataResponse = await this.getAvailableDevicesCountByName(
+      firstResponse.map((d) => d.item),
+    );
+    console.log('dataResponse:', JSON.stringify(dataResponse));
+    const secondPrompt = this.systemSecondPrompt(
+      question,
+      firstResponse,
+      dataResponse,
+    );
+
+    const secondResponse = await this.callLLM(secondPrompt, {
+      model: 'gemini-2.5-flash',
+      responseMimeType: 'text/html',
+      maxOutputTokens: 1000,
+    });
+
+    return secondResponse;
   }
 
   private async callLLM(
@@ -57,7 +74,10 @@ export class LlmService implements OnModuleInit {
       });
 
       if (!response) throw new HttpException('No response from LLM', 500);
-
+      console.log(
+        'LLM raw response:',
+        response?.candidates?.[0]?.content?.parts?.[0]?.text,
+      );
       const rawText = response?.candidates?.[0]?.content?.parts?.[0]?.text;
 
       if (!rawText) {
@@ -114,7 +134,7 @@ export class LlmService implements OnModuleInit {
     }
   }
 
-  private systemPrompt(deviceList: string[], question: string): string {
+  private systemFirstPrompt(deviceList: string[], question: string): string {
     const header = `
 Bạn là trợ lý kỹ thuật cho phòng Lab IoT.
 
@@ -223,5 +243,64 @@ YÊU CẦU NGƯỜI DÙNG:
     }
 
     return data;
+  }
+  private async getAvailableDevicesCountByName(listName: string[]) {
+    const devices = await this.prisma.device.groupBy({
+      by: ['name'],
+      where: {
+        name: {
+          in: listName,
+          mode: 'insensitive',
+        },
+        status: 'AVAILABLE',
+        isDeleted: false,
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    if (!devices || devices.length === 0) {
+      throw new HttpException('No available devices found', 404);
+    }
+
+    return devices.map((d) => ({
+      item: d.name,
+      quantity: d._count._all,
+    }));
+  }
+
+  private systemSecondPrompt(
+    question: string,
+    requested: { item: string; quantity: number }[],
+    available: { item: string; quantity: number }[],
+  ): string {
+    return `
+    Bạn là trợ lý kỹ thuật cho phòng Lab IoT.
+
+    NHIỆM VỤ:
+    - So sánh yêu cầu người dùng với số lượng thiết bị HIỆN CÓ trong kho
+    - Trả lời NGẮN GỌN, RÕ RÀNG, DỄ HIỂU cho người dùng
+    - KHÔNG bịa số
+    - CHỈ dùng dữ liệu được cung cấp
+
+    CÂU HỎI NGƯỜI DÙNG:
+    "${question}"
+
+    DANH SÁCH THIẾT BỊ NGƯỜI DÙNG YÊU CẦU:
+    ${JSON.stringify(requested, null, 2)}
+
+    SỐ LƯỢNG THIẾT BỊ HIỆN CÓ TRONG KHO:
+    ${JSON.stringify(available, null, 2)}
+
+    QUY TẮC TRẢ LỜI:
+    1. Nếu số lượng hiện có >= số lượng yêu cầu → nói là ĐỦ
+    2. Nếu thiếu → nói rõ THIẾU BAO NHIÊU
+    3. Nếu không có thiết bị nào → nói là KHÔNG CÓ
+    4. Câu trả lời dưới định dạng HTML giùm tui để FRONTEND dễ hiển thị
+    5. KHÔNG JSON, KHÔNG markdown
+
+    BẮT ĐẦU TRẢ LỜI:
+    `;
   }
 }

@@ -1,8 +1,8 @@
 ###
 POST http://localhost:5050/api/llm/analyze
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNWFjODI0ZS05M2I5LTRhZDAtOTgxNC1jNDAxZjk0ZGI1NzEiLCJlbWFpbCI6Imxlbmh1dGR1eUBnbWFpbC5jb20iLCJyb2xlIjoiTUFOQUdFUiIsImlhdCI6MTc2NTYxNDEyMSwiZXhwIjoxNzY1NjE3NzIxfQ.mufuTL6im5cgS0HjgFc6xuzTUMR4oGd_Ve2sntbffjw
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNWFjODI0ZS05M2I5LTRhZDAtOTgxNC1jNDAxZjk0ZGI1NzEiLCJlbWFpbCI6Imxlbmh1dGR1eUBnbWFpbC5jb20iLCJyb2xlIjoiTUFOQUdFUiIsImlhdCI6MTc2NTYxNzgxMCwiZXhwIjoxNzY1NjIxNDEwfQ.ck2zMCHMNGWkvi9j_L21BsLFeyzSCzF4OH3-7uCobEI
 Content-Type: application/json
 
 {
-    "question": "Tôi cần 5 sv, pin và khoan"
+    "question": "Tôi cần máy khoan và tay cầm điều khiển"
 }

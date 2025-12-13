@@ -17,3 +17,5 @@ Vít
 Máy chiếu Epson EB-test
 Máy khoan
 Esp32
+Tay cầm điều khiển
+Máy khoan cầm tay
