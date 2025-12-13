@@ -1,8 +1,9 @@
 ###
 POST http://localhost:5050/api/llm/analyze
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNWFjODI0ZS05M2I5LTRhZDAtOTgxNC1jNDAxZjk0ZGI1NzEiLCJlbWFpbCI6Imxlbmh1dGR1eUBnbWFpbC5jb20iLCJyb2xlIjoiTUFOQUdFUiIsImlhdCI6MTc2NTYxNzgxMCwiZXhwIjoxNzY1NjIxNDEwfQ.ck2zMCHMNGWkvi9j_L21BsLFeyzSCzF4OH3-7uCobEI
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNWFjODI0ZS05M2I5LTRhZDAtOTgxNC1jNDAxZjk0ZGI1NzEiLCJlbWFpbCI6Imxlbmh1dGR1eUBnbWFpbC5jb20iLCJyb2xlIjoiTUFOQUdFUiIsImlhdCI6MTc2NTYzMzUyNiwiZXhwIjoxNzY1NjM3MTI2fQ.-27Zd-TXsjcLs48ktXPVipnUZ76T0obG8Bf2bcRStBI
 Content-Type: application/json
 
 {
-    "question": "Tôi cần máy khoan và tay cầm điều khiển"
+    "question": "Tôi cần xe điều khiển trong kho có hok"
 }
+
