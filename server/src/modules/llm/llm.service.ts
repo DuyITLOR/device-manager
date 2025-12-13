@@ -31,7 +31,7 @@ export class LlmService implements OnModuleInit {
 
     const firstResponse = await this.callLLM(firstPrompt, {
       model: 'gemini-2.5-flash',
-      responseMimeType: 'application/json',
+      temperature: 0,
       maxOutputTokens: 1000,
     });
 
@@ -45,11 +45,15 @@ export class LlmService implements OnModuleInit {
       dataResponse,
     );
 
-    const secondResponse = await this.callLLM(secondPrompt, {
-      model: 'gemini-2.5-flash',
-      responseMimeType: 'text/html',
-      maxOutputTokens: 1000,
-    });
+    const secondResponse = await this.callLLM(
+      secondPrompt,
+      {
+        model: 'gemini-2.5-flash',
+        temperature: 0.3,
+        maxOutputTokens: 500,
+      },
+      true,
+    );
 
     return secondResponse;
   }
@@ -58,9 +62,10 @@ export class LlmService implements OnModuleInit {
     prompt: string,
     options?: {
       model?: string;
-      responseMimeType?: string;
+      temperature?: number;
       maxOutputTokens?: number;
     },
+    flag = false,
   ): Promise<any> {
     if (!this.aiClient)
       throw new HttpException('AI client not initialized', 500);
@@ -71,6 +76,10 @@ export class LlmService implements OnModuleInit {
       const response = await this.aiClient.models.generateContent({
         model,
         contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: options?.temperature || 0,
+          maxOutputTokens: options?.maxOutputTokens || 500,
+        },
       });
 
       if (!response) throw new HttpException('No response from LLM', 500);
@@ -83,9 +92,13 @@ export class LlmService implements OnModuleInit {
       if (!rawText) {
         throw new Error('Empty LLM output');
       }
-      const jsonText = this.extractJson(rawText);
-      const parsed = JSON.parse(jsonText);
-      return this.validateResult(parsed);
+      if (!flag) {
+        const jsonText = this.extractJson(rawText);
+        const parsed = JSON.parse(jsonText);
+        return this.validateResult(parsed);
+      } else {
+        return rawText;
+      }
     } catch (err) {
       this.logger.error('callLLM error', err);
       throw new HttpException('Error calling Gemini', 500);
@@ -143,7 +156,7 @@ NHIỆM VỤ:
 - Suy luận ngữ nghĩa (semantic reasoning)
 - Trích xuất danh sách thiết bị PHÙ HỢP từ cơ sở dữ liệu
 
-⚠️ CỰC KỲ QUAN TRỌNG:
+  CỰC KỲ QUAN TRỌNG:
 - KHÔNG giải thích
 - KHÔNG markdown
 - KHÔNG thêm chữ ngoài định dạng
@@ -252,7 +265,6 @@ YÊU CẦU NGƯỜI DÙNG:
           in: listName,
           mode: 'insensitive',
         },
-        status: 'AVAILABLE',
         isDeleted: false,
       },
       _count: {
@@ -261,7 +273,7 @@ YÊU CẦU NGƯỜI DÙNG:
     });
 
     if (!devices || devices.length === 0) {
-      throw new HttpException('No available devices found', 404);
+      return [];
     }
 
     return devices.map((d) => ({
