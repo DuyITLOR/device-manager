@@ -114,15 +114,15 @@ function AdminUsersContent() {
   if (hasAccess === null || hasAccess === false) return null;
 
   return (
-    <div className='min-h-screen p-4 md:p-8'>
+    <div className='space-y-6'>
+      <div>
+        <h1 className='text-3xl font-bold gradient-text'>Quản lý người dùng</h1>
+        <p className='text-muted-foreground mt-1'>Quản lý người dùng và quyền hạn trong hệ thống</p>
+      </div>
       <div className='max-w-7xl mx-auto space-y-6'>
         <Card className='glass-card'>
           <CardHeader>
             <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4'>
-              <div>
-                <CardTitle className='text-2xl'>Quản lý người dùng</CardTitle>
-                <CardDescription className='mt-1'>Quản lý người dùng và quyền hạn trong hệ thống</CardDescription>
-              </div>
               <Button onClick={() => setCreateDialogOpen(true)} size='lg'>
                 <Plus className='w-4 h-4 mr-2' />
                 Thêm người dùng
