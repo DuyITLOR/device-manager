@@ -37,7 +37,7 @@ import { HealthModule } from './modules/health/health.module';
     QrModule,
     HealthModule,
     MqttModule,
-    LlmModule
+    LlmModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
