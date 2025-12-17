@@ -98,9 +98,7 @@ export class ActivityService {
         totalPages,
         hasMore: page < totalPages,
       },
-      data: {
-        items: activityLogs,
-      },
+      data: activityLogs,
     };
   }
 
