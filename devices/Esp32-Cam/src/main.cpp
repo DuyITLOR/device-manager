@@ -20,16 +20,13 @@ void onSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 void setup()
 {
   Serial.begin(115200);
-
   pinMode(led, OUTPUT);
-
   Serial.println("\n[ESP32-CAM] Booting...");
-
   WiFi.mode(WIFI_STA);
   // WiFi.begin("THREE O'CLOCK", "3open24h");
-  WiFi.begin("i680", "RoboticsLab@1!");
-  // uint8_t routerBSSID[] = {0x40, 0xE3, 0xD6, 0xC3, 0x0D, 0xC4}; // BSSID của AP ESP32 chính
-  // WiFi.begin("THREE O'CLOCK", "3open24h", 6, routerBSSID);
+  // WiFi.begin("i680", "RoboticsLab@1!");
+  uint8_t routerBSSID[] = {0x40, 0xE3, 0xD6, 0xC3, 0x0D, 0xC4}; // BSSID của AP ESP32 chính
+  WiFi.begin("THREE O'CLOCK", "3open24h", 6, routerBSSID);
   Serial.print("[WiFi] Connecting");
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -51,7 +48,6 @@ void setup()
     Serial.println("[ERROR] ESP-NOW init failed!");
     return;
   }
-
   esp_now_register_send_cb(onSent);
   esp_now_peer_info_t peerInfo = {};
   memcpy(peerInfo.peer_addr, receiverAddress, 6);
@@ -67,10 +63,6 @@ void setup()
     Serial.println("[ERROR] Failed to add peer!");
   }
 
-  // Serial.print("BSSID: ");
-  // Serial.println(WiFi.BSSIDstr());
-
-  // 🟧 6) Start Camera + QR
   reader.setup();
   reader.beginOnCore(1);
 

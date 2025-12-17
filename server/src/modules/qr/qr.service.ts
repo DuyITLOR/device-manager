@@ -27,7 +27,7 @@ export class QrExportService {
       let currentY = startY;
       let count = 0;
 
-      (async () => {
+      void (async () => {
         for (const id of ids) {
           const qrBuffer = await QRCode.toBuffer(id, {
             width: qrSize,
