@@ -1,8 +1,10 @@
 #include "config.h"
 
 // WiFi credentials
-const char *ssid = "i680";
-const char *password = "RoboticsLab@1!";
+// const char *ssid = "i680";
+// const char *password = "RoboticsLab@1!";
+const char *ssid = "THREE O'CLOCK";
+const char *password = "3open24h";
 
 // MQTT broker settings
 const char* mqtt_server = "d88f57c7216c42dcb02df9d78d1c49ed.s1.eu.hivemq.cloud";
