@@ -246,7 +246,7 @@ export class TransferService {
 
     const result = await this.prisma.$transaction(
       async (tx) => {
-        const updatedTransfer = tx.transfer.update({
+        const updatedTransfer = await tx.transfer.update({
           where: { id: transferId },
           data: {
             status: dto.status,
