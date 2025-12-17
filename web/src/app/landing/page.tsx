@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { Package, QrCode, Users, History, Shield, Zap } from 'lucide-react';
+import { Package, QrCode, Users, History, Shield, Bot } from 'lucide-react';
 
 const Landing = () => {
   const router = useRouter();
@@ -111,9 +111,9 @@ const features = [
     description: 'Phân quyền theo vai trò đảm bảo bảo mật dữ liệu và kiểm soát truy cập phù hợp',
   },
   {
-    icon: Zap,
-    title: 'Cập Nhật Thời Gian Thực',
-    description: 'Nhận thông báo tức thì cho các yêu cầu chuyển giao và thay đổi trạng thái thiết bị',
+    icon: Bot,
+    title: 'Chatbot LLM Hỗ Trợ',
+    description: 'Trợ lý AI thông minh tư vấn và tìm kiếm thiết bị, giải đáp thắc mắc 24/7',
   },
 ];
 
