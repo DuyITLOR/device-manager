@@ -6,6 +6,7 @@ import { HttpException } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import { Logger } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { systemFirstPrompt, systemSecondPrompt } from './prompt';
 @Injectable()
 export class LlmService implements OnModuleInit {
   private aiClient: any = null;
@@ -27,7 +28,7 @@ export class LlmService implements OnModuleInit {
 
     const deviceList = this.loadDeviceDatabase();
 
-    const firstPrompt = this.systemFirstPrompt(deviceList, sanitizedQuestion);
+    const firstPrompt = systemFirstPrompt(deviceList, sanitizedQuestion);
 
     const firstResponse = await this.callLLM(firstPrompt, {
       model: 'gemini-2.5-flash',
@@ -39,7 +40,7 @@ export class LlmService implements OnModuleInit {
       firstResponse.map((d) => d.item),
     );
     console.log('dataResponse:', JSON.stringify(dataResponse));
-    const secondPrompt = this.systemSecondPrompt(
+    const secondPrompt = systemSecondPrompt(
       question,
       firstResponse,
       dataResponse,
@@ -147,75 +148,6 @@ export class LlmService implements OnModuleInit {
     }
   }
 
-  private systemFirstPrompt(deviceList: string[], question: string): string {
-    const header = `
-Bạn là trợ lý kỹ thuật cho phòng Lab IoT.
-
-NHIỆM VỤ:
-- Phân tích yêu cầu người dùng
-- Suy luận ngữ nghĩa (semantic reasoning)
-- Trích xuất danh sách thiết bị PHÙ HỢP từ cơ sở dữ liệu
-
-  CỰC KỲ QUAN TRỌNG:
-- KHÔNG giải thích
-- KHÔNG markdown
-- KHÔNG thêm chữ ngoài định dạng
-- CHỈ trả nội dung nằm giữa START_JSON và END_JSON
-`;
-
-    const db = `
-CƠ SỞ DỮ LIỆU THIẾT BỊ (DB):
-${deviceList.map((d, i) => `${i + 1}. ${d}`).join('\n')}
-`;
-
-    const rules = `
-QUY TẮC SUY LUẬN NGỮ NGHĨA:
-
-1. Nếu người dùng dùng từ CHUNG (ví dụ: "máy", "thiết bị", "dụng cụ"):
-   → Trả về TẤT CẢ thiết bị trong DB có liên quan về mặt ý nghĩa.
-
-2. Nếu người dùng dùng từ CỤ THỂ (ví dụ: "máy chiếu"):
-   → Trả về TẤT CẢ thiết bị liên quan đến khái niệm đó trong DB.
-
-3. Nếu từ khóa KHÔNG trùng chính xác nhưng GẦN NGHĨA:
-   → VẪN phải match (ví dụ: "đo pin" → "Máy đo pin").
-
-4. Nếu người dùng KHÔNG nói số lượng:
-   → quantity mặc định = 1.
-
-5. Nếu KHÔNG tìm được thiết bị phù hợp:
-   → Trả về mảng rỗng [].
-6. Xử lý các trường hợp đồng nghĩa, viết tắt, lỗi chính tả nhẹ, viết dư ("ví dụ: tua vít và vít).
-`;
-
-    const outputFormat = `
-ĐỊNH DẠNG OUTPUT (BẮT BUỘC):
-
-START_JSON
-[
-  {
-    "item": "<tên thiết bị đúng trong DB>",
-    "quantity": <số nguyên dương>
-  }
-]
-END_JSON
-
-Ví dụ HỢP LỆ:
-START_JSON
-[
-  { "item": "Máy đo pin", "quantity": 5 }
-]
-END_JSON
-`;
-
-    const user = `
-YÊU CẦU NGƯỜI DÙNG:
-"${question}"
-`;
-
-    return [header, db, rules, outputFormat, user].join('\n\n');
-  }
-
   private extractJson(text: string): string {
     if (!text) {
       throw new Error('Empty LLM response');
@@ -281,64 +213,5 @@ YÊU CẦU NGƯỜI DÙNG:
       item: d.name,
       quantity: d._count._all,
     }));
-  }
-
-  private systemSecondPrompt(
-    question: string,
-    requested: { item: string; quantity: number }[],
-    available: { item: string; quantity: number }[],
-  ): string {
-    return `
-    Bạn là thủ kho của phòng Lab IoT. Hãy báo cáo tình trạng thiết bị cho user.
-
-    DỮ LIỆU:
-    - Yêu cầu (Request): ${JSON.stringify(requested)}
-    - Trong kho (Stock): ${JSON.stringify(available)}
-
-    NHIỆM VỤ:
-    Dựa vào "quantity" trong Request để quyết định cách trả lời:
-
-    LOGIC 1: CHẾ ĐỘ TRA CỨU (Khi quantity = 0)
-    - Ý nghĩa: User hỏi "còn bao nhiêu", "có những loại nào".
-    - Hành động:
-      1. Gom nhóm các thiết bị cùng loại (ví dụ: các loại "Máy chiếu").
-      2. Báo cáo TỔNG số lượng hiện có.
-      3. Liệt kê chi tiết tên từng dòng máy và số lượng của nó.
-      4. KHÔNG báo "Đủ" hay "Thiếu".
-
-    LOGIC 2: CHẾ ĐỘ MƯỢN/KIỂM TRA (Khi quantity > 0)
-    - Ý nghĩa: User nói rõ "lấy 5 cái", "cần 2 cái".
-    - Hành động:
-      1. Tính tổng tồn kho của loại thiết bị đó.
-      2. So sánh Tổng Tồn Kho vs Số Lượng Yêu Cầu.
-      3. Trả về kết quả:
-         - ✅ ĐỦ: Nếu Tổng Tồn >= Yêu Cầu.
-         - ⚠️ THIẾU: Nếu Tổng Tồn < Yêu Cầu (Ghi rõ: Cần A nhưng chỉ còn B).
-         - ❌ HẾT: Nếu Tổng Tồn = 0.
-
-    QUY TẮC HIỂN THỊ (HTML):
-    - Sử dụng thẻ <ul>, <li>, <b> để trình bày gọn gàng.
-    - Với các thiết bị có nhiều phiên bản (như máy chiếu, mạch), hãy gom vào một mục lớn.
-    
-    VÍ DỤ OUTPUT MONG MUỐN (HTML):
-    
-    [Trường hợp Tra cứu - quantity = 0]
-    <ul>
-      <li><b>Máy chiếu</b>: Hiện còn tổng <b>15 cái</b>. Gồm:
-         <ul>
-            <li>Epson EB-X05: 5 cái</li>
-            <li>Sony VPL: 10 cái</li>
-         </ul>
-      </li>
-      <li><b>Vít</b>: Hiện còn 20 cái.</li>
-    </ul>
-
-    [Trường hợp Mượn - quantity = 5]
-    <ul>
-       <li><b>Máy chiếu</b>: ✅ <b>ĐỦ</b> (Kho còn 15 cái, sẵn sàng cho mượn).</li>
-    </ul>
-
-    HÃY TRẢ LỜI CÂU HỎI SAU CỦA USER: "${question}"
-    `;
   }
 }
