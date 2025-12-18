@@ -222,20 +222,6 @@ export class LoanService {
             },
           });
 
-          // create Activity Log for device status update
-          await tx.activityLog.create({
-            data: {
-              actorId,
-              action: ActivityAction.DEVICE_UPDATE,
-              targetType: ActivityTargetType.Device,
-              targetId: updatedDevice.id,
-              details: {
-                name: updatedDevice.name,
-                status: updatedDevice.status,
-              },
-            },
-          });
-
           results.push(loan);
         }
         return results;
