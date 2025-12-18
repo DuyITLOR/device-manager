@@ -1,9 +1,5 @@
 import {
-  IsDataURI,
-  IsNotEmpty,
   IsString,
-  IsDate,
-  isString,
 	IsOptional,
 	IsInt,
 	Min,

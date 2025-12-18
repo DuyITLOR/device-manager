@@ -1,9 +1,7 @@
-import { LoanStatus } from '@prisma/client';
 import {
   IsArray,
   IsDate,
   IsNotEmpty,
-  isNotEmpty,
   IsString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
