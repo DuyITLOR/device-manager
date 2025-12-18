@@ -5,10 +5,6 @@ export class UpdateLoanDto {
 	@IsNotEmpty()
 	@IsString()
 	deviceId: string;
-
-	@IsOptional()
-	@IsString()
-	borrowerId?: string;
 	
 	@IsOptional()
 	@IsString()

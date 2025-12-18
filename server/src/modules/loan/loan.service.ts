@@ -3,12 +3,10 @@ import {
   PrismaClient,
   Prisma,
   Loan,
-  Device,
   ActivityAction,
   ActivityTargetType,
 } from '@prisma/client';
 import { ActivityService } from '../activity/activity.service';
-import { CreateLogInput } from '../activity/interfaces';
 import {
   DEVICE_MESSAGES,
   LOAN_MESSAGES,
@@ -295,7 +293,9 @@ export class LoanService {
               deviceName: existingLoan.device.name,
               userName: existingLoan.borrower.name,
             };
-          } else {
+          }
+          // Case 2: Normal Update (update note of Loan) 
+          else {
             console.log('Normal update operation detected');
             const diff = generateDiff(existingLoan, updatedData);
             if (!diff) {
