@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect, Suspense } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
@@ -11,8 +11,9 @@ import PaginationComponent from '@/components/ui/pagination-component';
 import { Loading } from '@/components/ui/loading';
 import ActivityTable from '@/components/activity/activity-table';
 import ActivityFilterForm from '@/components/activity/activity-filter-form';
+import { Loader2 } from 'lucide-react';
 
-const AdminActivityPage = () => {
+const AdminActivityComponents = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -107,4 +108,16 @@ const AdminActivityPage = () => {
   );
 };
 
-export default AdminActivityPage;
+export default function AdminActivityPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='min-h-screen flex items-center justify-center'>
+          <Loader2 className='w-8 h-8 animate-spin text-primary' />
+        </div>
+      }
+    >
+      <AdminActivityComponents />
+    </Suspense>
+  );
+}
