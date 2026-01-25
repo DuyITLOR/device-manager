@@ -6,7 +6,8 @@
     "dev": "next dev -p 4000",
     "build": "next build --webpack",
     "start": "next start -p 4000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "start:prod": "next start -p 4000"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",

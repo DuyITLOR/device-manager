@@ -2,8 +2,10 @@
   "name": "device-manager",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "main": "index.js",
   "scripts": {
+    "start:prod": "concurrently -n \"WEB,SERVER\" -c \"cyan,green\" \"pnpm --filter server start:prod\" \"pnpm --filter web start:prod\"",
     "dev": "concurrently -n \"WEB,SERVER\" -c \"cyan,green\" \"pnpm --filter=web run dev\" \"pnpm --filter=server run dev\"",
     "dev:web": "pnpm --filter=web run dev",
     "dev:server": "pnpm --filter=server run dev",

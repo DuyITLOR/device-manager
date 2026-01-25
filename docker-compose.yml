@@ -1,12 +1,6 @@
 services:
-  server:
-    build: ./server
-    ports:
-      - "5050:5050"
-
-  client:
-    build: ./web
+  app:
+    build: .
     ports:
       - "80:4000"
-    depends_on:
-      - server
+      - "5050:5050"
