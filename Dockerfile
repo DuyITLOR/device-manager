@@ -21,10 +21,11 @@ RUN cd server && DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" np
 
 # 7. Build backend + frontend
 RUN pnpm --filter server build
+RUN ls -la server/dist || echo "Server dist folder not found"
 RUN pnpm --filter web build
 
 # 8. Expose port
 EXPOSE 4000 5050
 
 # 9. Chạy PROD (FE + BE)
-CMD sh -c "node server/dist/main.js & pnpm --filter web start:prod"
+CMD sh -c "pnpm --filter server start:prod & pnpm --filter web start:prod"
