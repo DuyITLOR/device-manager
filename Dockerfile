@@ -16,8 +16,8 @@ COPY web ./web
 # 5. Cài dependency cho toàn monorepo
 RUN pnpm install --frozen-lockfile
 
-# 6.generate Prisma Client
-RUN pnpm --filter server exec prisma generate
+# 6. Generate Prisma Client (với DATABASE_URL mock cho build time)
+RUN cd server && DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 # 7. Build backend + frontend
 RUN pnpm --filter server build
