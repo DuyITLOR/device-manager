@@ -27,4 +27,4 @@ RUN pnpm --filter web build
 EXPOSE 4000 5050
 
 # 9. Chạy PROD (FE + BE)
-CMD ["pnpm", "start:prod"]
+CMD sh -c "node server/dist/main.js & pnpm --filter web start:prod"
