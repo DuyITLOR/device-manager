@@ -16,9 +16,9 @@ export class QrExportService {
 
       const startX = 40;
       const startY = 40;
-      const qrSize = 20;
-      const gap = 30;
-      const cols = 4;
+      const qrSize = 40;
+      const gap = 20;
+      const cols = 8;
       const textHeight = 30;
       const cellWidth = qrSize + gap;
       const cellHeight = qrSize + gap + textHeight;
@@ -30,7 +30,7 @@ export class QrExportService {
       void (async () => {
         for (const id of ids) {
           const qrBuffer = await QRCode.toBuffer(id, {
-            width: qrSize,
+            width: qrSize * 6,
             margin: 1,
           });
 
@@ -46,8 +46,8 @@ export class QrExportService {
           const qrPosX = currentX + (cellWidth - qrSize) / 2;
           const qrPosY = currentY + gap / 2;
           doc.image(qrBuffer, qrPosX, qrPosY, { width: qrSize });
-
-          doc.fontSize(6).text(id, currentX, qrPosY + qrSize + 5, {
+          const shortId = id.slice(0, 3) + '...' + id.slice(-3);
+          doc.fontSize(6).text(shortId, currentX, qrPosY + qrSize + 5, {
             width: cellWidth,
             align: 'center',
           });
