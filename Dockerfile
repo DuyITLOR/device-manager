@@ -1,26 +1,30 @@
 FROM node:18-alpine
 
+# 1. Thư mục làm việc
 WORKDIR /app
 
-# Cài pnpm
+# 2. Cài pnpm
 RUN npm install -g pnpm
 
-# Copy file workspace + lock
+# 3. Copy các file workspace & lock
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 
-# Copy toàn bộ source
-COPY . .
+# 4. Copy toàn bộ source
+COPY server ./server
+COPY web ./web
 
-# Cài dependency cho toàn workspace
+# 5. Cài dependency cho toàn monorepo
 RUN pnpm install --frozen-lockfile
 
-# Build server + web
+# 6.generate Prisma Client
+RUN pnpm --filter server exec prisma generate
+
+# 7. Build backend + frontend
 RUN pnpm --filter server build
 RUN pnpm --filter web build
 
-# Expose FE + BE
+# 8. Expose port
 EXPOSE 4000 5050
 
-# Chạy cả 2 (dùng concurrently hoặc pm2)
+# 9. Chạy PROD (FE + BE)
 CMD ["pnpm", "start:prod"]
-
