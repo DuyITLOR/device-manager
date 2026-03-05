@@ -49,4 +49,4 @@ WORKDIR /app/server
 
 EXPOSE 5050
 
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
