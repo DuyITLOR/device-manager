@@ -16,8 +16,9 @@ RUN pnpm install --filter server --frozen-lockfile
 # Copy server source code
 COPY server/ ./server/
 
-# Generate Prisma client for linux-musl (Alpine)
-# DATABASE_URL is required by prisma.config.ts at load time but not used during generate
+# Generate Prisma client for linux-musl-arm64 (Alpine on Pi)
+# Use library engine to avoid downloading ARM64 binaries at build time
+ENV PRISMA_CLI_QUERY_ENGINE_TYPE=library
 RUN DATABASE_URL="postgresql://dummy:dummy@dummy:5432/dummy" \
     DIRECT_URL="postgresql://dummy:dummy@dummy:5432/dummy" \
     pnpm --filter server exec prisma generate
