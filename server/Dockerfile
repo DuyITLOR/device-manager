@@ -17,7 +17,10 @@ RUN pnpm install --filter server --frozen-lockfile
 COPY server/ ./server/
 
 # Generate Prisma client for linux-musl (Alpine)
-RUN pnpm --filter server exec prisma generate
+# DATABASE_URL is required by prisma.config.ts at load time but not used during generate
+RUN DATABASE_URL="postgresql://dummy:dummy@dummy:5432/dummy" \
+    DIRECT_URL="postgresql://dummy:dummy@dummy:5432/dummy" \
+    pnpm --filter server exec prisma generate
 
 # Compile NestJS → dist/
 RUN pnpm --filter server build
