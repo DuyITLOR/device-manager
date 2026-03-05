@@ -33,11 +33,12 @@ ENV NODE_ENV=production
 RUN corepack enable
 
 # Copy workspace manifests
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY package.json pnpm-workspace.yaml ./
 COPY web/package.json ./web/
 
-# Install production dependencies only (next is in dependencies, not devDependencies)
-RUN pnpm install --filter web --prod --frozen-lockfile
+# Copy node_modules từ builder (không cần install lại)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/web/node_modules ./web/node_modules
 
 # Copy build output and static assets
 COPY --from=builder /app/web/.next ./web/.next
