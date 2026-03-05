@@ -1,6 +1,0 @@
-services:
-  app:
-    build: .
-    ports:
-      - "80:4000"
-      - "5050:5050"
