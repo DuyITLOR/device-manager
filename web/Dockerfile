@@ -9,7 +9,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY web/package.json ./web/
 
 # Install all dependencies for web package
-RUN pnpm install --filter web --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --filter web --frozen-lockfile
 
 # Copy source code
 COPY web/ ./web/
